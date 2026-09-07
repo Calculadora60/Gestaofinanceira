@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão financeira</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #4b5563;
+            --border-color: #d1d5db;
+            --result-bg: #f9fafb;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --text-color: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --result-bg: #111827;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .calculator-container {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 520px;
+            transition: background-color 0.3s;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        .help-btn {
+            background: var(--border-color);
+            border: none;
+            color: var(--text-color);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .help-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .alert-box {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .goal-section {
+            background-color: var(--result-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .progress-bar-bg {
+            background-color: var(--border-color);
+            border-radius: 4px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background-color: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .goal-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            align-items: center;
+        }
+
+        .goal-input-container label {
+            font-size: 0.8rem;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .goal-input-container input {
+            padding: 6px;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto 15px auto;
+            height: 160px;
+        }
+
+        .results {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .result-card {
+            background-color: var(--result-bg);
+            border-left: 5px solid #4f46e5;
+            padding: 12px 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .result-card:nth-child(1) { border-left-color: #4f46e5; }
+        .result-card:nth-child(2) { border-left-color: #10b981; }
+        .result-card:nth-child(3) { border-left-color: #f59e0b; }
+        .result-card:nth-child(4) { border-left-color: #ef4444; }
+
+        .result-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .label-input {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: bold;
+            font-size: 0.95rem;
+            width: 55%;
+            outline: none;
+        }
+
+        .value {
+            font-weight: 700;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        /* Estilo da Lista de Gastos Internos */
+        .expense-list-container {
+            border-top: 1px dashed var(--border-color);
+            padding-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .expense-items {
+            max-height: 100px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .expense-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            background: var(--card-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .expense-row button {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .expense-add-form {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .expense-add-form input[type="text"] {
+            flex: 2;
+            padding: 5px 8px;
+            font-size: 0.82rem;
+        }
+
+        .expense-add-form input[type="number"] {
+            flex: 1;
+            padding: 5px 8px;
+            font-size: 0.82rem;
+        }
+
+        .expense-add-form button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .expense-summary {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--border-color); color: var(--text-color); }
+
+        .history-section {
+            margin-top: 25px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-header h3 { font-size: 1rem; margin: 0; color: var(--text-muted); }
+        .clear-history { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem; }
+
+        .history-list {
+            max-height: 140px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .history-item {
+            background-color: var(--result-bg);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .evolution-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+        .evolution-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+        }
+
+        /* Janela Modal de Ajuda */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 { color: var(--primary-color); margin-top: 0; }
+        .modal-close {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <!-- Modal de Ajuda -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <h3>Como funciona o método 60/20/10/10?</h3>
+            <p>Este é um método simples de organização financeira onde você divide toda a sua renda líquida mensal em 4 partes estratégicas:</p>
+            <ul>
+                <li><b>60% - Custos Fixos:</b> Para pagar contas essenciais como aluguel, água, luz, internet, supermercado e transporte.</li>
+                <li><b>20% - Investimentos:</b> Foco no seu futuro, construção de reserva de emergência e independência financeira.</li>
+                <li><b>10% - Objetivos/Lazer:</b> Dinheiro livre para passeios, restaurantes, hobbies e pequenos desejos sem culpa.</li>
+                <li><b>10% - Doações/Outros:</b> Para caridade, ajuda a terceiros ou pequenos imprevistos.</li>
+            </ul>
+            <p>Adicione itens em cada lista para acompanhar quanto você já gastou do orçamento de cada categoria!</p>
+            <button class="modal-close" onclick="fecharAjuda()">Entendi</button>
+        </div>
+    </div>
+
+    <div class="calculator-container">
+        <div class="header-top">
+            <div class="header-title-area">
+                <h2>Gestão financeira</h2>
+                <button class="help-btn" onclick="abrirAjuda()">?</button>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Tema</button>
+        </div>
+        
+        <div class="input-group">
+            <label for="valorTotal">Valor Total Disponível (R$):</label>
+            <input type="number" id="valorTotal" placeholder="Ex: 3000.00" step="0.01" oninput="calcularDivisao()">
+        </div>
+
+        <div id="alertBox" class="alert-box">⚠️ Por favor, insira um valor válido maior que zero.</div>
+
+        <div class="goal-section">
+            <div class="goal-header">
+                <span id="goalTitleText">Meta de Investimento:</span>
+                <span id="goalProgressText">R$ 0,00 / R$ 0,00 (0%)</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="goalProgressBar"></div>
+            </div>
+            <div class="goal-input-container">
+                <label for="metaInput">Definir Meta (R$):</label>
+                <input type="number" id="metaInput" placeholder="Ex: 1000.00" step="0.01" oninput="atualizarMeta()">
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="financeChart"></canvas>
+        </div>
+
+        <div class="results" id="categoriesContainer">
+            <!-- As categorias serão renderizadas via script dinamicamente para gerenciar listas -->
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="copiarResumo()">📋 Copiar Resumo</button>
+            <button class="btn btn-secondary" onclick="salvarHistorico()">💾 Salvar</button>
+        </div>
+
+        <div class="history-section">
+            <div class="history-header">
+                <h3>Histórico Salvo (Toque para ver)</h3>
+                <button class="clear-history" onclick="limparHistorico()">Limpar</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>
+            </div>
+        </div>
+
+        <div class="evolution-section">
+            <div class="history-header">
+                <h3>Evolução dos Valores Salvos</h3>
+            </div>
+            <div class="evolution-container">
+                <canvas id="evolutionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
+            });
+        }
+
+        let financeChart, evolutionChart;
+        
+        // Estrutura de dados das 4 categorias com suas listas de gastos
+        let categoriasData = [
+            { id: 0, defaultLabel: '60% - Custos Fixos', label: '60% - Custos Fixos', percent: 0.60, items: [] },
+            { id: 1, defaultLabel: '20% - Investimentos', label: '20% - Investimentos', percent: 0.20, items: [] },
+            { id: 2, defaultLabel: '10% - Objetivos/Lazer', label: '10% - Objetivos/Lazer', percent: 0.10, items: [] },
+            { id: 3, defaultLabel: '10% - Doações/Outros', label: '10% - Doações/Outros', percent: 0.10, items: [] }
+        ];
+
+        function initApp() {
+            initCharts();
+            renderizarCategorias();
+            carregarHistorico();
+            atualizarGraficoEvolucao();
+        }
+
+        function abrirAjuda() { document.getElementById('helpModal').style.display = 'flex'; }
+        function fecharAjuda() { document.getElementById('helpModal').style.display = 'none'; }
+
+        function initCharts() {
+            const ctxPie = document.getElementById('financeChart').getContext('2d');
+            financeChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: categoriasData.map(c => c.label),
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            const ctxLine = document.getElementById('evolutionChart').getContext('2d');
+            evolutionChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Total Salvo (R$)',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderizarCategorias() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            const total = parseFloat(document.getElementById('valorTotal').value) || 0;
+
+            categoriasData.forEach((cat, index) => {
+                const limite = total * cat.percent;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
+                const saldo = limite - totalGasto;
+                const saldoClass = saldo < 0 ? 'color: #ef4444; font-weight: bold;' : 'color: #10b981; font-weight: bold;';
+
+                let itensHTML = '';
+                cat.items.forEach((item, itemIdx) => {
+                    itensHTML += `
+                        <div class="expense-row">
+                            <span>${item.name}</span>
+                            <div>
+                                <strong>${formatarMoeda(item.val)}</strong>
+                                <button onclick="removerGasto(${index}, ${itemIdx})">✕</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                if (cat.items.length === 0) {
+                    itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="result-card">
+                        <div class="result-header-row">
+                            <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
+                            <span class="value" id="valCat_${index}">${formatarMoeda(limite)}</span>
+                        </div>
+                        
+                        <div class="expense-list-container">
+                            <div class="expense-items">${itensHTML}</div>
+                            <div class="expense-add-form">
+                                <input type="text" id="desc_${index}" placeholder="Nome (ex: Luz, Aluguel...)">
+                                <input type="number" id="val_${index}" placeholder="R$" step="0.01"><button onclick="adicionarGasto(${index})">+</button>
+                            </div>
+                            <div class="expense-summary">
+                                <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
+                                <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function atualizarNomeCategoria(index, novoNome) {
+            categoriasData[index].label = novoNome;
+            atualizarGrafico();
+            atualizarMeta();
+        }
+function adicionarGasto(catIndex) {
+            const descInput = document.getElementById(`desc_${catIndex}`);
+            const valInput = document.getElementById(`val_${catIndex}`);
+            
+            const nome = descInput.value.trim();
+            const valor = parseFloat(valInput.value);
+
+            if (!nome || isNaN(valor) || valor <= 0) {
+                alert('Insira uma descrição válida e um valor maior que zero.');
+                return;
+            }
+
+            categoriasData[catIndex].items.push({ name: nome, val: valor });
+            descInput.value = '';
+            valInput.value = '';
+            renderizarCategorias();
+        }function removerGasto(catIndex, itemIndex) {
+            categoriasData[catIndex].items.splice(itemIndex, 1);
+            renderizarCategorias();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
+        }
+
+        function formatarMoeda(num) {
+            return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }function calcularDivisao() {
+            const inputValor = document.getElementById('valorTotal').value;
+            const valor = parseFloat(inputValor);
+            const alertBox = document.getElementById('alertBox');
+
+            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {
+                alertBox.style.display = 'block';
+                renderizarCategorias();
+                atualizarGrafico(0,0,0,0);
+                return;
+            } else {
+                alertBox.style.display = 'none';
+            }
+
+            renderizarCategorias();
+            atualizarGrafico();
+            atualizarMeta();
+        }function atualizarGrafico() {
+            const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
+            const valores = categoriasData.map(c => inputValor * c.percent);
+            const labels = categoriasData.map(c => c.label);
+
+            financeChart.data.labels = labels;
+            financeChart.data.datasets[0].data = valores;
+            financeChart.update();
+        }
+
+        function atualizarMeta() {
+            const valorTotal = parseFloat(document.getElementById('valorTotal').value) || 0;
+            const val20 = valorTotal * 0.20; 
+            const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;document.getElementById('goalTitleText').innerText = `Meta (${categoriasData[1].label}):`;
+
+            let porcentagem = 0;
+            if (metaValor > 0) {
+                porcentagem = Math.min((val20 / metaValor) * 100, 100);
+            }
+
+            document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+            document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
+        }
+
+        function copiarResumo() {
+            const total = document.getElementById('valorTotal').value;
+            if (!total || total <= 0) { alert('Insira um valor válido primeiro!'); return; }let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
+            
+            categoriasData.forEach(cat => {
+                const limite = parseFloat(total) * cat.percent;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
+                const saldo = limite - totalGasto;
+
+                texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
+                if(cat.items.length > 0) {
+                    cat.items.forEach(i => { texto += `   - ${i.name}: ${formatarMoeda(i.val)}\n`; });
+                } else {
+                    texto += `   - Sem gastos anotados\n`;
+                }
+                texto += `   *Sobrando:* ${formatarMoeda(saldo)}\n\n`;
+            });navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
+        }
+
+        function salvarHistorico() {
+            const total = document.getElementById('valorTotal').value;
+            if (!total || total <= 0) { alert('Insira um valor válido para salvar!'); return; }
+
+            const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const itemHistorico = {
+                data: dataAtual,
+                valorBruto: parseFloat(total),
+                valorFormatado: formatarMoeda(parseFloat(total)),
+                categoriasCopia: JSON.parse(JSON.stringify(categoriasData))
+            };if (historico.length === 0) {
+                historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
+                return;
+            }
+
+            historyList.innerHTML = '';
+            historico.forEach((item, index) => {
+                historyList.innerHTML += `
+                    <div class="history-item" onclick="carregarCalculoSalvo(${index})">
+                        <span>📅 ${item.data}</span>
+                        <strong>${item.valorFormatado}</strong>
+                    </div>
+                `;
+            });
+        }function carregarCalculoSalvo(index) {
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v2')) || [];
+            if (historico[index]) {
+                document.getElementById('valorTotal').value = historico[index].valorBruto;
+                if (historico[index].categoriasCopia) {
+                    categoriasData = historico[index].categoriasCopia;
+                }
+                renderizarCategorias();
+                atualizarGrafico();
+                atualizarMeta();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function atualizarGraficoEvolucao() {
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v2')) || [];
+            let historicoCronologico = [...historico].reverse();
+evolutionChart.data.labels = historicoCronologico.map(i => i.data);
+            evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
+            evolutionChart.update();
+        }
+
+        function limparHistorico() {
+            localStorage.removeItem('fin_historico_v2');
+            carregarHistorico();
+            atualizarGraficoEvolucao();
+        }
+
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+</body>
+</html>
