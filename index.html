@@ -250,7 +250,6 @@
             font-size: 0.95rem;
         }
 
-        /* Estilo da Lista de Gastos Internos */
         .expense-list-container {
             border-top: 1px dashed var(--border-color);
             padding-top: 8px;
@@ -398,7 +397,6 @@
             margin-top: 10px;
         }
 
-        /* Janela Modal de Ajuda */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -441,7 +439,6 @@
 </head>
 <body data-theme="light">
 
-    <!-- Modal de Ajuda -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
             <h3>Como funciona o método 60/20/10/10?</h3>
@@ -491,9 +488,7 @@
             <canvas id="financeChart"></canvas>
         </div>
 
-        <div class="results" id="categoriesContainer">
-            <!-- As categorias serão renderizadas via script dinamicamente para gerenciar listas -->
-        </div>
+        <div class="results" id="categoriesContainer"></div>
 
         <div class="actions">
             <button class="btn btn-primary" onclick="copiarResumo()">📋 Copiar Resumo</button>
@@ -529,7 +524,6 @@
 
         let financeChart, evolutionChart;
         
-        // Estrutura de dados das 4 categorias com suas listas de gastos
         let categoriasData = [
             { id: 0, defaultLabel: '60% - Custos Fixos', label: '60% - Custos Fixos', percent: 0.60, items: [] },
             { id: 1, defaultLabel: '20% - Investimentos', label: '20% - Investimentos', percent: 0.20, items: [] },
@@ -624,15 +618,15 @@
                             <div class="expense-items">${itensHTML}</div>
                             <div class="expense-add-form">
                                 <input type="text" id="desc_${index}" placeholder="Nome (ex: Luz, Aluguel...)">
-                                <input type="number" id="val_${index}" placeholder="R$" step="0.01"><button onclick="adicionarGasto(${index})">+</button>
+                                <input type="number" id="val_${index}" placeholder="R$" step="0.01">
+                                <button onclick="adicionarGasto(${index})">+</button>
                             </div>
                             <div class="expense-summary">
                                 <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
                                 <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
@@ -641,14 +635,14 @@
             atualizarGrafico();
             atualizarMeta();
         }
-function adicionarGasto(catIndex) {
+
+        function adicionarGasto(catIndex) {
             const descInput = document.getElementById(`desc_${catIndex}`);
             const valInput = document.getElementById(`val_${catIndex}`);
             
             const nome = descInput.value.trim();
             const valor = parseFloat(valInput.value);
-
-            if (!nome || isNaN(valor) || valor <= 0) {
+if (!nome || isNaN(valor) || valor <= 0) {
                 alert('Insira uma descrição válida e um valor maior que zero.');
                 return;
             }
@@ -657,7 +651,9 @@ function adicionarGasto(catIndex) {
             descInput.value = '';
             valInput.value = '';
             renderizarCategorias();
-        }function removerGasto(catIndex, itemIndex) {
+        }
+
+        function removerGasto(catIndex, itemIndex) {
             categoriasData[catIndex].items.splice(itemIndex, 1);
             renderizarCategorias();
         }
@@ -665,20 +661,20 @@ function adicionarGasto(catIndex) {
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';body.setAttribute('data-theme', newTheme);
             document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
         }
 
         function formatarMoeda(num) {
             return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }function calcularDivisao() {
+        }
+
+        function calcularDivisao() {
             const inputValor = document.getElementById('valorTotal').value;
             const valor = parseFloat(inputValor);
             const alertBox = document.getElementById('alertBox');
 
-            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {
-                alertBox.style.display = 'block';
+            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {alertBox.style.display = 'block';
                 renderizarCategorias();
                 atualizarGrafico(0,0,0,0);
                 return;
@@ -689,12 +685,13 @@ function adicionarGasto(catIndex) {
             renderizarCategorias();
             atualizarGrafico();
             atualizarMeta();
-        }function atualizarGrafico() {
+        }
+
+        function atualizarGrafico() {
             const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
             const valores = categoriasData.map(c => inputValor * c.percent);
             const labels = categoriasData.map(c => c.label);
-
-            financeChart.data.labels = labels;
+financeChart.data.labels = labels;
             financeChart.data.datasets[0].data = valores;
             financeChart.update();
         }
@@ -702,25 +699,26 @@ function adicionarGasto(catIndex) {
         function atualizarMeta() {
             const valorTotal = parseFloat(document.getElementById('valorTotal').value) || 0;
             const val20 = valorTotal * 0.20; 
-            const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;document.getElementById('goalTitleText').innerText = `Meta (${categoriasData[1].label}):`;
+            const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;
+
+            document.getElementById('goalTitleText').innerText = `Meta (${categoriasData[1].label}):`;
 
             let porcentagem = 0;
             if (metaValor > 0) {
                 porcentagem = Math.min((val20 / metaValor) * 100, 100);
-            }
-
-            document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+            }document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
             document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
         }
 
         function copiarResumo() {
             const total = document.getElementById('valorTotal').value;
-            if (!total || total <= 0) { alert('Insira um valor válido primeiro!'); return; }let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
+            if (!total || total <= 0) { alert('Insira um valor válido primeiro!'); return; }
+
+            let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
             
             categoriasData.forEach(cat => {
                 const limite = parseFloat(total) * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
-                const saldo = limite - totalGasto;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);const saldo = limite - totalGasto;
 
                 texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
                 if(cat.items.length > 0) {
@@ -729,10 +727,10 @@ function adicionarGasto(catIndex) {
                     texto += `   - Sem gastos anotados\n`;
                 }
                 texto += `   *Sobrando:* ${formatarMoeda(saldo)}\n\n`;
-            });navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
-        }
+            });
 
-        function salvarHistorico() {
+            navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
+        }function salvarHistorico() {
             const total = document.getElementById('valorTotal').value;
             if (!total || total <= 0) { alert('Insira um valor válido para salvar!'); return; }
 
@@ -742,7 +740,21 @@ function adicionarGasto(catIndex) {
                 valorBruto: parseFloat(total),
                 valorFormatado: formatarMoeda(parseFloat(total)),
                 categoriasCopia: JSON.parse(JSON.stringify(categoriasData))
-            };if (historico.length === 0) {
+            };
+
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v2')) || [];historico.unshift(itemHistorico);
+            if (historico.length > 10) historico.pop();
+
+            localStorage.setItem('fin_historico_v2', JSON.stringify(historico));
+            carregarHistorico();
+            atualizarGraficoEvolucao();
+            alert('Cálculo salvo no histórico!');
+        }
+
+        function carregarHistorico() {
+            const historyList = document.getElementById('historyList');
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v2')) || [];
+if (historico.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
                 return;
             }
@@ -768,20 +780,18 @@ function adicionarGasto(catIndex) {
                 atualizarMeta();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        }
-
-        function atualizarGraficoEvolucao() {
+        }function atualizarGraficoEvolucao() {
             let historico = JSON.parse(localStorage.getItem('fin_historico_v2')) || [];
             let historicoCronologico = [...historico].reverse();
-evolutionChart.data.labels = historicoCronologico.map(i => i.data);
+
+            evolutionChart.data.labels = historicoCronologico.map(i => i.data);
             evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
             evolutionChart.update();
         }
 
         function limparHistorico() {
             localStorage.removeItem('fin_historico_v2');
-            carregarHistorico();
-            atualizarGraficoEvolucao();
+            carregarHistorico(); atualizarGraficoEvolucao();
         }
 
         window.onload = function() {
