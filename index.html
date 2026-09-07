@@ -349,7 +349,6 @@
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-secondary { background-color: var(--border-color); color: var(--text-color); }
 
-        /* Histórico e Filtros */
         .history-section {
             margin-top: 25px;
             border-top: 1px solid var(--border-color);
@@ -431,7 +430,6 @@
             margin-top: 10px;
         }
 
-        /* Janelas Modais (Ajuda e Calendário) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -511,7 +509,6 @@
 </head>
 <body data-theme="light">
 
-    <!-- Modal de Ajuda -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
             <h3>Como funciona o método 60/20/10/10?</h3>
@@ -526,7 +523,6 @@
         </div>
     </div>
 
-    <!-- Modal do Calendário / Lembretes -->
     <div class="modal-overlay" id="calendarModal">
         <div class="modal-content">
             <h3>📅 Lembretes e Vencimentos</h3>
@@ -651,10 +647,9 @@
         }
 
         function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
-  function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
         function abrirCalendario() { abrirModal('calendarModal'); renderizarLembretes(); }
-
-        function initCharts() {
+function initCharts() {
             const ctxPie = document.getElementById('financeChart').getContext('2d');
             financeChart = new Chart(ctxPie, {
                 type: 'doughnut',
@@ -665,10 +660,10 @@
                         backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'],
                         borderWidth: 0
                     }]
-                },options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
-
-            const ctxLine = document.getElementById('evolutionChart').getContext('2d');
+const ctxLine = document.getElementById('evolutionChart').getContext('2d');
             evolutionChart = new Chart(ctxLine, {
                 type: 'line',
                 data: {
@@ -680,10 +675,11 @@
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         fill: true,
                         tension: 0.3
-                    }]},
+                    }]
+                },
                 options: { 
                     responsive: true, 
-                    maintainAspectRatio: false,
+                   maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { y: { beginAtZero: true } }
                 }
@@ -695,9 +691,9 @@
             container.innerHTML = '';
             const total = parseFloat(document.getElementById('valorTotal').value) || 0;
 
-            categoriasData.forEach((cat, index) => {const limite = total * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
-                const saldo = limite - totalGasto;
+            categoriasData.forEach((cat, index) => {
+                const limite = total * cat.percent;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);const saldo = limite - totalGasto;
                 const saldoClass = saldo < 0 ? 'color: #ef4444; font-weight: bold;' : 'color: #10b981; font-weight: bold;';
 
                 let itensHTML = '';
@@ -709,10 +705,10 @@
                                 <strong>${formatarMoeda(item.val)}</strong>
                                 <button onclick="removerGasto(${index}, ${itemIdx})">✕</button>
                             </div>
-                        </div>`;
+                        </div>
+                    `;
                 });
-                if (cat.items.length === 0) {
-                    itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
+                if (cat.items.length === 0) {itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
                 }
 
                 container.innerHTML += `
@@ -720,24 +716,23 @@
                         <div class="result-header-row">
                             <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
                             <span class="value">${formatarMoeda(limite)}</span>
-                        </div>      
+                        </div>
+                        
                         <div class="expense-list-container">
-                            <div class="expense-items">${itensHTML}</div>
-                            <div class="expense-add-form">
+                            <div class="expense-items">${itensHTML}</div><div class="expense-add-form">
                                 <input type="text" id="desc_${index}" placeholder="Nome (ex: Luz...)">
                                 <input type="number" id="val_${index}" placeholder="R$" step="0.01">
                                 <button onclick="adicionarGasto(${index})">+</button>
                             </div>
                             <div class="expense-summary">
                                 <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
-                                <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span></div>
+                                <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
+                            </div>
                         </div>
                     </div>
                 `;
             });
-        }
-
-        function atualizarNomeCategoria(index, novoNome) {
+        }function atualizarNomeCategoria(index, novoNome) {
             categoriasData[index].label = novoNome;
             atualizarGrafico();
             atualizarMeta();
@@ -747,9 +742,10 @@
             const descInput = document.getElementById(`desc_${catIndex}`);
             const valInput = document.getElementById(`val_${catIndex}`);
             const nome = descInput.value.trim();
-            const valor = parseFloat(valInput.value);if (!nome || isNaN(valor) || valor <= 0) {
-                alert('Insira uma descrição válida e um valor maior que zero.');
-                return;
+            const valor = parseFloat(valInput.value);
+
+            if (!nome || isNaN(valor) || valor <= 0) {
+                alert('Insira uma descrição válida e um valor maior que zero.');return;
             }
 
             categoriasData[catIndex].items.push({ name: nome, val: valor });
@@ -765,8 +761,8 @@
 
         function toggleTheme() {
             const body = document.body;
-            const currentTheme = body.getAttribute('data-theme');const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';body.setAttribute('data-theme', newTheme);
             document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
         }
 
@@ -777,8 +773,9 @@
         function calcularDivisao() {
             const inputValor = document.getElementById('valorTotal').value;
             const valor = parseFloat(inputValor);
-            const alertBox = document.getElementById('alertBox');if (inputValor !== "" && (isNaN(valor) || valor < 0)) {
-                alertBox.style.display = 'block';
+            const alertBox = document.getElementById('alertBox');
+
+            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {alertBox.style.display = 'block';
                 renderizarCategorias();
                 atualizarGrafico();
                 return;
@@ -794,8 +791,7 @@
         function atualizarGrafico() {
             const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
             financeChart.data.labels = categoriasData.map(c => c.label);
-           financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);
-            financeChart.update();
+            financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);financeChart.update();
         }
 
         function atualizarMeta() {
@@ -806,8 +802,8 @@
             document.getElementById('goalTitleText').innerText = `Meta (${categoriasData[1].label}):`;
             let porcentagem = metaValor > 0 ? Math.min((val20 / metaValor) * 100, 100) : 0;
 
-            document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
-        }
+            document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+            document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;}
 
         function copiarResumo() {
             const total = document.getElementById('valorTotal').value;
@@ -819,8 +815,8 @@
                 const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
                 const saldo = limite - totalGasto;
 
-                texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;if(cat.items.length > 0) {
-                    cat.items.forEach(i => { texto += `   - ${i.name}: ${formatarMoeda(i.val)}\n`; });
+                texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
+                if(cat.items.length > 0) {                    cat.items.forEach(i => { texto += `   - ${i.name}: ${formatarMoeda(i.val)}\n`; });
                 } else {
                     texto += `   - Sem gastos anotados\n`;
                 }
@@ -830,10 +826,10 @@
             navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
         }
 
-        // --- SISTEMA DE LEMBRETES E NOTIFICAÇÕES ---
         function adicionarLembrete() {
             const titulo = document.getElementById('remindTitle').value.trim();
-            const dataStr = document.getElementById('remindDate').value;if (!titulo || !dataStr) {
+            const dataStr = document.getElementById('remindDate').value;
+            if (!titulo || !dataStr) {
                 alert('Preencha o título e selecione uma data.');
                 return;
             }
@@ -846,9 +842,7 @@
             document.getElementById('remindDate').value = '';
             renderizarLembretes();
             alert('Lembrete salvo com sucesso!');
-        }
-
-        functionrenderizarLembretes() {
+        }function renderizarLembretes() {
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
             const container = document.getElementById('reminderList');
 
@@ -860,8 +854,8 @@
             container.innerHTML = '';
             lembretes.forEach((rem, idx) => {
                 let partesData = rem.date.split('-');
-                let dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
-                container.innerHTML += `       <div class="reminder-row">
+                let dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;container.innerHTML += `
+                    <div class="reminder-row">
                         <span><b>${rem.title}</b> (${dataFormatada})</span>
                         <button onclick="removerLembrete(${idx})">✕</button>
                     </div>
@@ -875,10 +869,9 @@
             localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
             renderizarLembretes();
         }
-
         function verificarLembretesDoDia() {
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            let hoje = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            let hoje = new Date().toISOString().split('T')[0];
 
             lembretes.forEach(rem => {
                 if (rem.date === hoje) {
@@ -888,15 +881,15 @@
         }
 
         function dispararNotificacao(titulo, corpo) {
-            if ('Notification' in window && Notification.permission === 'granted'){
-                new Notification(titulo, {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new
+                Notification(titulo, {
                     body: corpo,
                     icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png'
                 });
             }
         }
 
-        // --- HISTÓRICO E FILTROS (Dia, Semana, Mês, Ano) ---
         function filtrarHistorico(filtro, elementoBtn) {
             filtroAtual = filtro;
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -905,37 +898,32 @@
         }
 
         function salvarHistorico() {
-            const total = document.getElementById('valorTotal').value;if (!total || total <= 0) { alert('Insira um valor válido para salvar!'); return; }
-
+            const total = document.getElementById('valorTotal').value;
+            if (!total || total <= 0) { alert('Insira um valor válido para salvar!'); return; }
             const agora = new Date();
             const itemHistorico = {
                 timestamp: agora.getTime(),
                 dataCompleta: agora.toLocaleDateString('pt-BR'),
-                ano: agora.getFullYear(),
-                mes: agora.getMonth(),
-                diaDoAno: Math.floor((agora - new Date(agora.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24)),
-                semanaDoAno: Math.getWeek ? 0 : Math.ceil((((agora - new Date(agora.getFullYear(), 0, 1)) / 86400000) + new Date(agora.getFullYear(), 0, 1).getDay() + 1) / 7),
                 valorBruto: parseFloat(total),
-                valorFormatado:formatarMoeda(parseFloat(total)),
+                valorFormatado: formatarMoeda(parseFloat(total)),
                 categoriasCopia: JSON.parse(JSON.stringify(categoriasData))
             };
 
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v3')) || [];
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
             historico.unshift(itemHistorico);
-
-            localStorage.setItem('fin_historico_v3', JSON.stringify(historico));
+            localStorage.setItem('fin_historico_v4', JSON.stringify(historico));
             carregarHistorico();
             atualizarGraficoEvolucao();
             alert('Cálculo salvo no histórico!');
         }
 
         function carregarHistorico() {
-            const historyList = document.getElementById('historyList');   let historico = JSON.parse(localStorage.getItem('fin_historico_v3')) || [];
+            const historyList = document.getElementById('historyList');
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
 
             if (historico.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
-                return;
-            }
+                return;       }
 
             const agora = new Date();
             let historicoFiltrado = historico.filter(item => {
@@ -943,12 +931,11 @@
                 if (filtroAtual === 'dia') {
                     return itemDate.toDateString() === agora.toDateString();
                 } else if (filtroAtual === 'semana') {
-                    let diffTime =Math.abs(agora - itemDate);
-                    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays <= 7;
+                    let diffTime = agora - itemDate;
+                    let diffDays = diffTime / (1000 * 60 * 60 * 24);
+                    return diffDays >= 0 && diffDays <= 7;
                 } else if (filtroAtual === 'mes') {
-                    return itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();
-                } else if (filtroAtual === 'ano') {
+                    return itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();            } else if (filtroAtual === 'ano') {
                     return itemDate.getFullYear() === agora.getFullYear();
                 }
                 return true;
@@ -956,12 +943,13 @@
 
             if (historicoFiltrado.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum registro para este período.</div>`;
-                return;}
+                return;
+            }
 
             historyList.innerHTML = '';
             historicoFiltrado.forEach((item) => {
                 let originalIndex = historico.findIndex(h => h.timestamp === item.timestamp);
-                historyList.innerHTML += `
+                              historyList.innerHTML += `
                     <div class="history-item" onclick="carregarCalculoSalvo(${originalIndex})">
                         <span>📅 ${item.dataCompleta}</span>
                         <strong>${item.valorFormatado}</strong>
@@ -971,10 +959,10 @@
         }
 
         function carregarCalculoSalvo(index) {
-            let historico =JSON.parse(localStorage.getItem('fin_historico_v3')) || [];
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
             if (historico[index]) {
                 document.getElementById('valorTotal').value = historico[index].valorBruto;
-                if (historico[index].categoriasCopia) {
+                if (historico[index].categoriasCopia){
                     categoriasData = historico[index].categoriasCopia;
                 }
                 renderizarCategorias();
@@ -985,16 +973,15 @@
         }
 
         function atualizarGraficoEvolucao() {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v3')) || [];
-            lethistoricoCronologico = [...historico].reverse();
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
+            let historicoCronologico = [...historico].reverse();
 
-            evolutionChart.data.labels = historicoCronologico.map(i => i.dataCompleta);
-            evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
+            evolutionChart.data.labels = historicoCronologico.map(i => i.dataCompleta);          evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
             evolutionChart.update();
         }
 
         function limparHistorico() {
-            localStorage.removeItem('fin_historico_v3');
+            localStorage.removeItem('fin_historico_v4');
             carregarHistorico();
             atualizarGraficoEvolucao();
         }
