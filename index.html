@@ -124,7 +124,7 @@
             font-size: 0.95rem;
         }
 
-        input[type="number"], input[type="text"], input[type="date"] {
+        input[type="number"], input[type="text"], input[type="date"], select {
             width: 100%;
             padding: 10px 12px;
             box-sizing: border-box;
@@ -137,7 +137,7 @@
             transition: border-color 0.2s;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
@@ -151,6 +151,19 @@
             margin-bottom: 15px;
             display: none;
             font-weight: 600;
+        }
+
+        /* Insights Inteligentes */
+        .insights-box {
+            background-color: rgba(79, 70, 229, 0.08);
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .goal-section {
@@ -219,19 +232,14 @@
 
         .result-card {
             background-color: var(--result-bg);
-            border-left: 5px solid #4f46e5;
             padding: 12px 15px;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
             gap: 10px;
             font-size: 1rem;
+            border: 1px solid var(--border-color);
         }
-
-        .result-card:nth-child(1) { border-left-color: #4f46e5; }
-        .result-card:nth-child(2) { border-left-color: #10b981; }
-        .result-card:nth-child(3) { border-left-color: #f59e0b; }
-        .result-card:nth-child(4) { border-left-color: #ef4444; }
 
         .result-header-row {
             display: flex;
@@ -293,23 +301,19 @@
 
         .expense-add-form {
             display: flex;
+            flex-direction: column;
             gap: 6px;
             margin-top: 4px;
         }
 
-        .expense-add-form input[type="text"] {
-            flex: 2;
-            padding: 5px 8px;
-            font-size: 0.82rem;
+        .expense-form-row {
+            display: flex;
+            gap: 6px;
         }
 
-        .expense-add-form input[type="number"] {
-            flex: 1;
-            padding: 5px 8px;
-            font-size: 0.82rem;
-        }
-
-        .expense-add-form button {
+        .expense-form-row input[type="text"] { flex: 2; padding: 5px 8px; font-size: 0.82rem; }
+        .expense-form-row input[type="number"] { flex: 1; padding: 5px 8px; font-size: 0.82rem; }
+        .expense-form-row button {
             background: var(--primary-color);
             color: white;
             border: none;
@@ -320,6 +324,15 @@
             font-size: 0.85rem;
         }
 
+        .recurrent-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
         .expense-summary {
             display: flex;
             justify-content: space-between;
@@ -327,6 +340,25 @@
             font-weight: bold;
             color: var(--text-muted);
             margin-top: 2px;
+        }
+
+        .add-category-btn {
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            color: var(--text-muted);
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .add-category-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
 
         .actions {
@@ -363,7 +395,15 @@
         }
 
         .history-header h3 { font-size: 1rem; margin: 0; color: var(--text-muted); }
+        .history-actions-btns { display: flex; gap: 8px; align-items: center; }
+        .export-history { background: none; border: none; color: #10b981; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
         .clear-history { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.85rem; }
+
+        .search-input {
+            margin-bottom: 8px;
+            padding: 8px;
+            font-size: 0.85rem;
+        }
 
         .filter-tabs {
             display: flex;
@@ -505,24 +545,34 @@
             cursor: pointer;
             font-weight: bold;
         }
+
+        .new-cat-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body data-theme="light">
 
+    <!-- Modal de Ajuda -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
             <h3>Como funciona o método 60/20/10/10?</h3>
-            <p>Este é um método simples de organização financeira onde você divide toda a sua renda líquida mensal em 4 partes estratégicas:</p>
+            <p>Este é um método simples de organização financeira onde você divide toda a sua renda líquida mensal em partes estratégicas:</p>
             <ul>
-                <li><b>60% - Custos Fixos:</b> Contas essenciais como aluguel, água, luz, internet e mercado.</li>
-                <li><b>20% - Investimentos:</b> Construção de reserva e futuro.</li>
-                <li><b>10% - Objetivos/Lazer:</b> Dinheiro livre para passeios e desejos.</li>
-                <li><b>10% - Doações/Outros:</b> Imprevistos ou caridade.</li>
+                <li><b>Custos Fixos:</b> Contas essenciais como aluguel, água, luz, internet e mercado.</li>
+                <li><b>Investimentos:</b> Construção de reserva e futuro.</li>
+                <li><b>Objetivos/Lazer:</b> Dinheiro livre para passeios e desejos.</li>
+                <li><b>Doações/Outros:</b> Imprevistos ou caridade.</li>
             </ul>
+            <p>Agora você também pode adicionar categorias personalizadas e despesas fixas recorrentes!</p>
             <button class="modal-close" onclick="fecharModal('helpModal')">Entendi</button>
         </div>
     </div>
 
+    <!-- Modal do Calendário / Lembretes -->
     <div class="modal-overlay" id="calendarModal">
         <div class="modal-content">
             <h3>📅 Lembretes e Vencimentos</h3>
@@ -539,6 +589,20 @@
             </div>
 
             <button class="modal-close" onclick="fecharModal('calendarModal')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal Nova Categoria -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content">
+            <h3>🏷️ Adicionar Nova Categoria</h3>
+            <div class="new-cat-form">
+                <input type="text" id="newCatName" placeholder="Nome (ex: Pets, Faculdade...)">
+                <input type="number" id="newCatPercent" placeholder="Porcentagem do total (ex: 10 para 10%)" step="1">
+                <input type="color" id="newCatColor" value="#4f46e5" style="height: 40px; padding: 2px; cursor: pointer;">
+                <button class="btn btn-primary" onclick="salvarNovaCategoria()" style="padding: 8px;">Salvar Categoria</button>
+            </div>
+            <button class="modal-close" onclick="fecharModal('categoryModal')">Cancelar</button>
         </div>
     </div>
 
@@ -561,6 +625,11 @@
 
         <div id="alertBox" class="alert-box">⚠️ Por favor, insira um valor válido maior que zero.</div>
 
+        <!-- Insights Inteligentes -->
+        <div class="insights-box" id="insightsBox">
+            💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>
+        </div>
+
         <div class="goal-section">
             <div class="goal-header">
                 <span id="goalTitleText">Meta de Investimento:</span>
@@ -581,6 +650,8 @@
 
         <div class="results" id="categoriesContainer"></div>
 
+        <button class="add-category-btn" onclick="abrirModal('categoryModal')">+ Adicionar Categoria Personalizada</button>
+
         <div class="actions">
             <button class="btn btn-primary" onclick="copiarResumo()">📋 Copiar Resumo</button>
             <button class="btn btn-secondary" onclick="salvarHistorico()">💾 Salvar</button>
@@ -589,17 +660,20 @@
         <div class="history-section">
             <div class="history-header">
                 <h3>Histórico Salvo</h3>
-                <button class="clear-history" onclick="limparHistorico()">Limpar</button>
+                <div class="history-actions-btns">
+                    <button class="export-history" onclick="exportarCSV()">📥 Exportar</button>
+                    <button class="clear-history" onclick="limparHistorico()">Limpar</button>
+                </div>
             </div>
-            
+                      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Pesquisar no histórico..." oninput="carregarHistorico()">
+
             <div class="filter-tabs">
                 <button class="filter-tab active" onclick="filtrarHistorico('dia', this)">Dia</button>
                 <button class="filter-tab" onclick="filtrarHistorico('semana', this)">Semana</button>
                 <button class="filter-tab" onclick="filtrarHistorico('mes', this)">Mês</button>
                 <button class="filter-tab" onclick="filtrarHistorico('ano', this)">Ano</button>
             </div>
-
-            <div class="history-list" id="historyList">
+           <div class="history-list" id="historyList">
                 <div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>
             </div>
         </div>
@@ -613,7 +687,6 @@
             </div>
         </div>
     </div>
-
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -623,21 +696,39 @@
 
         let financeChart, evolutionChart;
         let filtroAtual = 'dia';
-        
-        let categoriasData = [
-            { id: 0, label: '60% - Custos Fixos', percent: 0.60, items: [] },
-            { id: 1, label: '20% - Investimentos', percent: 0.20, items: [] },
-            { id: 2, label: '10% - Objetivos/Lazer', percent: 0.10, items: [] },
-            { id: 3, label: '10% - Doações/Outros', percent: 0.10, items: [] }
+              
+        let categoriasData = JSON.parse(localStorage.getItem('fin_categorias_v5')) || [
+            { id: 0, label: '60% - Custos Fixos', percent: 0.60, color: '#4f46e5', items: [] },
+            { id: 1, label: '20% - Investimentos', percent: 0.20, color: '#10b981', items: [] },
+            { id: 2, label: '10% - Objetivos/Lazer', percent: 0.10, color: '#f59e0b', items: [] },
+            { id: 3, label: '10% - Doações/Outros', percent: 0.10, color: '#ef4444', items: [] }
         ];
 
         function initApp() {
+            verificarRecorrenciasMensais();
             initCharts();
             renderizarCategorias();
             carregarHistorico();
             atualizarGraficoEvolucao();
             verificarLembretesDoDia();
-            solicitarPermissaoNotificacao();
+           solicitarPermissaoNotificacao();
+        }
+
+        function verificarRecorrenciasMensais() {
+            let ultimoMesCheck = localStorage.getItem('fin_ultimo_mes_recorrente');
+            let mesAtual = new Date().getMonth();
+
+            if (ultimoMesCheck !== String(mesAtual)) {
+                // Virou o mês, injetar despesas recorrentes salvas
+                categoriasData.forEach(cat => {
+                    cat.items.forEach(item => {
+                        if (item.recorrente && !item.injetadoEsteMes) {
+                            // Mantém o item ativo para o novo mês
+                        }
+                    });
+                });
+                localStorage.setItem('fin_ultimo_mes_recorrente',mesAtual);
+            }
         }
 
         function solicitarPermissaoNotificacao() {
@@ -649,21 +740,22 @@
         function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
         function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
         function abrirCalendario() { abrirModal('calendarModal'); renderizarLembretes(); }
-function initCharts() {
+        function initCharts() {
             const ctxPie = document.getElementById('financeChart').getContext('2d');
             financeChart = new Chart(ctxPie, {
                 type: 'doughnut',
                 data: {
                     labels: categoriasData.map(c => c.label),
                     datasets: [{
-                        data: [0, 0, 0, 0],
-                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'],
+                        data: categoriasData.map(() => 0),
+                        backgroundColor: categoriasData.map(c => c.color || '#4f46e5'),
                         borderWidth: 0
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
-const ctxLine = document.getElementById('evolutionChart').getContext('2d');
+
+            const ctxLine = document.getElementById('evolutionChart').getContext('2d');
             evolutionChart = new Chart(ctxLine, {
                 type: 'line',
                 data: {
@@ -693,77 +785,157 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
 
             categoriasData.forEach((cat, index) => {
                 const limite = total * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);const saldo = limite - totalGasto;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);             const saldo = limite - totalGasto;
                 const saldoClass = saldo < 0 ? 'color: #ef4444; font-weight: bold;' : 'color: #10b981; font-weight: bold;';
 
                 let itensHTML = '';
                 cat.items.forEach((item, itemIdx) => {
+                    let recTag = item.recorrente ? ' 🔄' : '';
                     itensHTML += `
                         <div class="expense-row">
-                            <span>${item.name}</span>
+                            <span>${item.name}${recTag}</span>
                             <div>
                                 <strong>${formatarMoeda(item.val)}</strong>
                                 <button onclick="removerGasto(${index}, ${itemIdx})">✕</button>
                             </div>
                         </div>
                     `;
-                });
-                if (cat.items.length === 0) {itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
+                });            if (cat.items.length === 0) {
+                    itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
                 }
 
+                let deleteCatBtn = index >= 4 ? `<button onclick="removerCategoria(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;" title="Excluir Categoria">🗑️ Excluir</button>` : '';
+
                 container.innerHTML += `
-                    <div class="result-card">
-                        <div class="result-header-row">
-                            <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
-                            <span class="value">${formatarMoeda(limite)}</span>
+                    <div class="result-card" style="border-left: 5px solid ${cat.color || '#4f46e5'};">
+                        <div class="result-header-row">                           <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="value">${formatarMoeda(limite)}</span>
+                                ${deleteCatBtn}
+                            </div>
                         </div>
                         
                         <div class="expense-list-container">
-                            <div class="expense-items">${itensHTML}</div><div class="expense-add-form">
-                                <input type="text" id="desc_${index}" placeholder="Nome (ex: Luz...)">
-                                <input type="number" id="val_${index}" placeholder="R$" step="0.01">
-                                <button onclick="adicionarGasto(${index})">+</button>
+                            <div class="expense-items">${itensHTML}</div>
+                            <div class="expense-add-form">
+                                <div class="expense-form-row">
+                                    <input type="text" id="desc_${index}" placeholder="Nome do gasto...">                                   <input type="number" id="val_${index}" placeholder="R$" step="0.01">
+                                    <button onclick="adicionarGasto(${index})">+</button>
+                                </div>
+                                <label class="recurrent-label">
+                                    <input type="checkbox" id="rec_${index}"> Despesa Recorrente (todo mês)
+                                </label>
                             </div>
                             <div class="expense-summary">
                                 <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
                                 <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
                             </div>
-                        </div>
-                    </div>
+                        </div>                    </div>
                 `;
             });
-        }function atualizarNomeCategoria(index, novoNome) {
-            categoriasData[index].label = novoNome;
+            salvarDadosLocais();
+        }
+
+        function salvarNovaCategoria() {
+            const nome = document.getElementById('newCatName').value.trim();
+            const percentVal = parseFloat(document.getElementById('newCatPercent').value);
+            const cor = document.getElementById('newCatColor').value;
+
+            if (!nome || isNaN(percentVal) || percentVal <= 0) {
+                alert('Preencha um nome válido e uma porcentagem maior que zero.');
+                return;
+            }
+
+            categoriasData.push({
+                id: categoriasData.length,              label: `${percentVal}% - ${nome}`,
+                percent: percentVal / 100,
+                color: cor,
+                items: []
+            });
+
+            document.getElementById('newCatName').value = '';
+            document.getElementById('newCatPercent').value = '';
+            fecharModal('categoryModal');
+            renderizarCategorias();
             atualizarGrafico();
             atualizarMeta();
         }
 
+        function removerCategoria(index) {
+            if (confirm('Deseja realmente excluir esta categoria?')) {
+                categoriasData.splice(index, 1);
+               renderizarCategorias();
+                atualizarGrafico();
+                atualizarMeta();
+            }
+        }
+
+        function salvarDadosLocais() {
+            localStorage.setItem('fin_categorias_v5', JSON.stringify(categoriasData));
+        }
+
+        function atualizarNomeCategoria(index, novoNome) {
+            categoriasData[index].label = novoNome;
+            atualizarGrafico();
+            atualizarMeta();
+            salvarDadosLocais();
+        }
+
         function adicionarGasto(catIndex) {
-            const descInput = document.getElementById(`desc_${catIndex}`);
-            const valInput = document.getElementById(`val_${catIndex}`);
+            const descInput = document.getElementById(`desc_${catIndex}`);         const valInput = document.getElementById(`val_${catIndex}`);
+            const recInput = document.getElementById(`rec_${catIndex}`);
             const nome = descInput.value.trim();
             const valor = parseFloat(valInput.value);
+            const recorrente = recInput.checked;
 
             if (!nome || isNaN(valor) || valor <= 0) {
-                alert('Insira uma descrição válida e um valor maior que zero.');return;
+                alert('Insira uma descrição válida e um valor maior que zero.');
+                return;
             }
 
-            categoriasData[catIndex].items.push({ name: nome, val: valor });
+            categoriasData[catIndex].items.push({ name: nome, val: valor, recorrente: recorrente });
             descInput.value = '';
             valInput.value = '';
-            renderizarCategorias();
+            recInput.checked = false;            renderizarCategorias();
+            atualizarInsights();
         }
 
         function removerGasto(catIndex, itemIndex) {
             categoriasData[catIndex].items.splice(itemIndex, 1);
             renderizarCategorias();
+            atualizarInsights();
+        }
+
+        function atualizarInsights() {
+            const total = parseFloat(document.getElementById('valorTotal').value) || 0;
+            const insightsBox = document.getElementById('insightsBox');
+
+            if (!total || total <= 0) {
+                insightsBox.innerHTML = `💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>`;               return;
+            }
+
+            // Calcula total geral gasto
+            let totalGastoGeral = 0;
+            categoriasData.forEach(cat => {
+                totalGastoGeral += cat.items.reduce((acc, item) => acc + item.val, 0);
+            });
+
+            let percentualGasto = (totalGastoGeral / total) * 100;
+
+            if (percentualGasto > 80) {
+                insightsBox.innerHTML = `⚠️ <span style="color: #b91c1c; font-weight: bold;">Atenção: Você já comprometeu ${percentualGasto.toFixed(0)}% da sua renda total com gastos!</span>`;
+            } else if (percentualGasto > 50) {
+                insightsBox.innerHTML = `💡<span>Seus gastos estão em ${percentualGasto.toFixed(0)}% da renda. Continue controlando suas despesas.</span>`;
+            } else {
+                insightsBox.innerHTML = `🌟 <span style="color: #047857; font-weight: bold;">Parabéns! Suas finanças estão muito saudáveis, com ótimas margens de sobra.</span>`;
+            }
         }
 
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';body.setAttribute('data-theme', newTheme);
-            document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);           document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
         }
 
         function formatarMoeda(num) {
@@ -775,8 +947,9 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
             const valor = parseFloat(inputValor);
             const alertBox = document.getElementById('alertBox');
 
-            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {alertBox.style.display = 'block';
-                renderizarCategorias();
+            if (inputValor !== "" && (isNaN(valor) || valor < 0)) {
+                alertBox.style.display = 'block';
+               renderizarCategorias();
                 atualizarGrafico();
                 return;
             } else {
@@ -786,49 +959,54 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
             renderizarCategorias();
             atualizarGrafico();
             atualizarMeta();
+            atualizarInsights();
         }
 
         function atualizarGrafico() {
             const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
             financeChart.data.labels = categoriasData.map(c => c.label);
-            financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);financeChart.update();
+            financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);           financeChart.data.datasets[0].backgroundColor = categoriasData.map(c => c.color || '#4f46e5');
+            financeChart.update();
         }
 
         function atualizarMeta() {
             const valorTotal = parseFloat(document.getElementById('valorTotal').value) || 0;
-            const val20 = valorTotal * 0.20; 
+            // Procura a categoria de investimento (geralmente a 2ª ou com nome investimento)
+            let catInv = categoriasData.find(c => c.label.toLowerCase().includes('invest')) || categoriasData[1] || categoriasData[0];
+            const valInv = valorTotal * catInv.percent;
             const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;
+           document.getElementById('goalTitleText').innerText = `Meta (${catInv.label}):`;
+            let porcentagem = metaValor > 0 ? Math.min((valInv / metaValor) * 100, 100) : 0;
 
-            document.getElementById('goalTitleText').innerText = `Meta (${categoriasData[1].label}):`;
-            let porcentagem = metaValor > 0 ? Math.min((val20 / metaValor) * 100, 100) : 0;
-
-            document.getElementById('goalProgressText').innerText = `${formatarMoeda(val20)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
-            document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;}
+            document.getElementById('goalProgressText').innerText = `${formatarMoeda(valInv)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+            document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
+        }
 
         function copiarResumo() {
             const total = document.getElementById('valorTotal').value;
             if (!total || total <= 0) { alert('Insira um valor válido primeiro!'); return; }
 
             let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
-            categoriasData.forEach(cat => {
+           categoriasData.forEach(cat => {
                 const limite = parseFloat(total) * cat.percent;
                 const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
                 const saldo = limite - totalGasto;
 
                 texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
-                if(cat.items.length > 0) {                    cat.items.forEach(i => { texto += `   - ${i.name}: ${formatarMoeda(i.val)}\n`; });
+                if(cat.items.length > 0) {
+                    cat.items.forEach(i => { texto += `   - ${i.name}: ${formatarMoeda(i.val)}\n`; });
                 } else {
                     texto += `   - Sem gastos anotados\n`;
                 }
                 texto += `   *Sobrando:* ${formatarMoeda(saldo)}\n\n`;
             });
-
-            navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
+          navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
         }
 
         function adicionarLembrete() {
             const titulo = document.getElementById('remindTitle').value.trim();
             const dataStr = document.getElementById('remindDate').value;
+
             if (!titulo || !dataStr) {
                 alert('Preencha o título e selecione uma data.');
                 return;
@@ -836,25 +1014,27 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
 
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
             lembretes.push({ title: titulo, date: dataStr });
-            localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
+            localStorage.setItem('fin_lembretes',JSON.stringify(lembretes));
 
             document.getElementById('remindTitle').value = '';
             document.getElementById('remindDate').value = '';
             renderizarLembretes();
             alert('Lembrete salvo com sucesso!');
-        }function renderizarLembretes() {
+        }
+
+        function renderizarLembretes() {
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
             const container = document.getElementById('reminderList');
 
             if (lembretes.length === 0) {
-                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete cadastrado.</div>`;
-                return;
+                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete cadastrado.</div>`;             return;
             }
 
             container.innerHTML = '';
             lembretes.forEach((rem, idx) => {
                 let partesData = rem.date.split('-');
-                let dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;container.innerHTML += `
+                let dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+                container.innerHTML += `
                     <div class="reminder-row">
                         <span><b>${rem.title}</b> (${dataFormatada})</span>
                         <button onclick="removerLembrete(${idx})">✕</button>
@@ -862,35 +1042,33 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
                 `;
             });
         }
-
-        function removerLembrete(idx) {
+       function removerLembrete(idx) {
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
             lembretes.splice(idx, 1);
             localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
             renderizarLembretes();
         }
+
         function verificarLembretesDoDia() {
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
             let hoje = new Date().toISOString().split('T')[0];
 
             lembretes.forEach(rem => {
                 if (rem.date === hoje) {
-                    dispararNotificacao(`Vencimento Hoje!`, `Lembrete financeiro: ${rem.title}`);
+                                    dispararNotificacao(`Vencimento Hoje!`, `Lembrete financeiro: ${rem.title}`);
                 }
             });
         }
 
         function dispararNotificacao(titulo, corpo) {
             if ('Notification' in window && Notification.permission === 'granted') {
-                new
-                Notification(titulo, {
+                new Notification(titulo, {
                     body: corpo,
                     icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png'
                 });
             }
         }
-
-        function filtrarHistorico(filtro, elementoBtn) {
+      function filtrarHistorico(filtro, elementoBtn) {
             filtroAtual = filtro;
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
             elementoBtn.classList.add('active');
@@ -900,88 +1078,134 @@ const ctxLine = document.getElementById('evolutionChart').getContext('2d');
         function salvarHistorico() {
             const total = document.getElementById('valorTotal').value;
             if (!total || total <= 0) { alert('Insira um valor válido para salvar!'); return; }
+
             const agora = new Date();
             const itemHistorico = {
                 timestamp: agora.getTime(),
                 dataCompleta: agora.toLocaleDateString('pt-BR'),
-                valorBruto: parseFloat(total),
-                valorFormatado: formatarMoeda(parseFloat(total)),
+                valorBruto: parseFloat(total),            valorFormatado: formatarMoeda(parseFloat(total)),
                 categoriasCopia: JSON.parse(JSON.stringify(categoriasData))
             };
 
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
             historico.unshift(itemHistorico);
-            localStorage.setItem('fin_historico_v4', JSON.stringify(historico));
+
+            localStorage.setItem('fin_historico_v5', JSON.stringify(historico));
             carregarHistorico();
             atualizarGraficoEvolucao();
             alert('Cálculo salvo no histórico!');
         }
-
         function carregarHistorico() {
             const historyList = document.getElementById('historyList');
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
+            const termoBusca = document.getElementById('searchInput').value.toLowerCase();
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
 
             if (historico.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
-                return;       }
+                return;
+            }
 
             const agora = new Date();
             let historicoFiltrado = historico.filter(item => {
-                let itemDate = new Date(item.timestamp);
+                let itemDate = new Date(item.timestamp);            // Filtro temporal
+                let passaTempo = true;
                 if (filtroAtual === 'dia') {
-                    return itemDate.toDateString() === agora.toDateString();
+                    passaTempo = itemDate.toDateString() === agora.toDateString();
                 } else if (filtroAtual === 'semana') {
-                    let diffTime = agora - itemDate;
-                    let diffDays = diffTime / (1000 * 60 * 60 * 24);
-                    return diffDays >= 0 && diffDays <= 7;
+                    let diffDays = (agora - itemDate) / (1000 * 60 * 60 * 24);
+                    passaTempo = diffDays >= 0 && diffDays <= 7;
                 } else if (filtroAtual === 'mes') {
-                    return itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();            } else if (filtroAtual === 'ano') {
-                    return itemDate.getFullYear() === agora.getFullYear();
+                    passaTempo = itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();
+                } else if (filtroAtual === 'ano') {
+                    passaTempo = itemDate.getFullYear() === agora.getFullYear();
                 }
-                return true;
+
+                // Filtro de busca por texto
+                let passaBusca = true;
+                if (termoBusca) {
+                    let achouNosItens = false;
+                    item.categoriasCopia.forEach(cat => {
+                        cat.items.forEach(i => {
+                            if (i.name.toLowerCase().includes(termoBusca) || cat.label.toLowerCase().includes(termoBusca)) {
+                                achouNosItens = true;
+                            }
+                        });
+                    });
+                    passaBusca = item.dataCompleta.includes(termoBusca) || item.valorFormatado.includes(termoBusca) || achouNosItens;
+                }             return passaTempo && passaBusca;
             });
 
             if (historicoFiltrado.length === 0) {
-                historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum registro para este período.</div>`;
+                historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum registro encontrado.</div>`;
                 return;
             }
 
             historyList.innerHTML = '';
             historicoFiltrado.forEach((item) => {
                 let originalIndex = historico.findIndex(h => h.timestamp === item.timestamp);
-                              historyList.innerHTML += `
+                historyList.innerHTML += `
                     <div class="history-item" onclick="carregarCalculoSalvo(${originalIndex})">
-                        <span>📅 ${item.dataCompleta}</span>
-                        <strong>${item.valorFormatado}</strong>
+                        <span>📅 ${item.dataCompleta}</span>                 <strong>${item.valorFormatado}</strong>
                     </div>
                 `;
             });
         }
 
+        function exportarCSV() {
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
+            if (historico.length === 0) {
+                alert('Não há dados no histórico para exportar.');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Data;Valor Total;Categoria;Gasto;Valor Gasto\n";
+          historico.forEach(item => {
+                item.categoriasCopia.forEach(cat => {
+                    if (cat.items.length > 0) {
+                        cat.items.forEach(i => {
+                            csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};${i.name};${i.val}\n`;
+                        });
+                    } else {
+                        csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};Nenhum;0\n`;
+                    }
+                });
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href",encodedUri);
+            link.setAttribute("download", "historico_financeiro.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function carregarCalculoSalvo(index) {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
             if (historico[index]) {
                 document.getElementById('valorTotal').value = historico[index].valorBruto;
-                if (historico[index].categoriasCopia){
+                if (historico[index].categoriasCopia) {
                     categoriasData = historico[index].categoriasCopia;
                 }
-                renderizarCategorias();
+                               renderizarCategorias();
                 atualizarGrafico();
                 atualizarMeta();
+                atualizarInsights();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         function atualizarGraficoEvolucao() {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v4')) || [];
+            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
             let historicoCronologico = [...historico].reverse();
 
-            evolutionChart.data.labels = historicoCronologico.map(i => i.dataCompleta);          evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
+            evolutionChart.data.labels = historicoCronologico.map(i => i.dataCompleta);
+            evolutionChart.data.datasets[0].data =historicoCronologico.map(i => i.valorBruto);
             evolutionChart.update();
         }
 
         function limparHistorico() {
-            localStorage.removeItem('fin_historico_v4');
+            localStorage.removeItem('fin_historico_v5');
             carregarHistorico();
             atualizarGraficoEvolucao();
         }
