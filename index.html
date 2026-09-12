@@ -151,7 +151,7 @@
             font-size: 0.95rem;
         }
 
-        input[type="number"], input[type="text"], input[type="date"], select {
+        input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="password"], select {
             width: 100%;
             padding: 10px 12px;
             box-sizing: border-box;
@@ -229,13 +229,7 @@
             margin-top: 8px;
         }
 
-        .goal-controls select {
-            flex: 1;
-            padding: 6px;
-            font-size: 0.8rem;
-        }
-
-        .goal-controls input {
+        .goal-controls select, .goal-controls input {
             flex: 1;
             padding: 6px;
             font-size: 0.8rem;
@@ -665,7 +659,7 @@
                 <h2>Gestão financeira</h2>
                 <div class="header-buttons">
                     <button class="icon-btn" onclick="abrirCalendario()" title="Calendário">📅</button>
-                    <button class="icon-btn" onclick="abrirModal('helpModal')" title="Ajuda">?</button>
+                          <button class="icon-btn" onclick="abrirModal('helpModal')" title="Ajuda">?</button>
                 </div>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()">🌙 Tema</button>
@@ -677,6 +671,7 @@
         </div>
 
         <div id="alertBox" class="alert-box">⚠️ Por favor, insira um valor válido maior que zero.</div>
+
         <div class="insights-box" id="insightsBox">
             💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>
         </div>
@@ -690,7 +685,8 @@
                 <div class="progress-bar-fill" id="goalProgressBar"></div>
             </div>
             <div class="goal-controls">
-                <select id="goalCategorySelect" onchange="atualizarMeta()"></select>               <input type="number" id="metaInput" placeholder="Valor Meta (R$)" step="0.01" oninput="atualizarMeta()">
+                <select id="goalCategorySelect" onchange="atualizarMeta()"></select>
+                <input type="number" id="metaInput" placeholder="Valor Meta (R$)" step="0.01" oninput="atualizarMeta()">
             </div>
         </div>
 
@@ -706,7 +702,6 @@
             <button class="btn btn-primary" onclick="copiarResumo()">📋 Copiar Resumo</button>
             <button class="btn btn-secondary" onclick="salvarHistorico()" id="btnSalvarHistorico">💾 Salvar no Histórico</button>
         </div>
-
         <div class="history-section">
             <div class="history-header">
                 <h3>Histórico Salvo</h3>
@@ -724,7 +719,8 @@
                 <button class="filter-tab" onclick="filtrarHistorico('mes', this)">Mês</button>
                 <button class="filter-tab" onclick="filtrarHistorico('ano', this)">Ano</button>
             </div>
-           <div class="history-list" id="historyList">
+
+            <div class="history-list" id="historyList">
                 <div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>
             </div>
         </div>
@@ -739,7 +735,8 @@
         </div>
     </div>
 
-    <script>       // CONFIGURAÇÃO DO FIREBASE (Insira sua configuração gratuita do Firebase aqui se desejar nuvem real)
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE (Insira sua configuração gratuita do Firebase aqui se desejar nuvem real)
         const firebaseConfig = {
             apiKey: "SUA_API_KEY",
             authDomain: "seu-projeto.firebaseapp.com",
@@ -757,12 +754,13 @@
             }
         } catch(e) { useCloud = false; }
 
-        let currentUser = null;       let db = useCloud ? firebase.firestore() : null;
+        let currentUser = null;
+        let db = useCloud ? firebase.firestore() : null;
         let auth = useCloud ? firebase.auth() : null;
 
         let financeChart, evolutionChart;
         let filtroAtual = 'dia';
-        let editandoIndex = null; // Guarda o índice se estiver editando um histórico existente
+        let editandoIndex = null;
         
         let categoriasData = [
             { id: 0, label: '60% - Custos Fixos', percent: 0.60, color: '#4f46e5', items: [] },
@@ -783,7 +781,7 @@
                         carregarDadosDaNuvem();
                     } else {
                         document.getElementById('userStatusText').innerText = 'Modo Offline (Salvo no aparelho)';
-                       document.getElementById('authBarBtn').innerText = 'Entrar / Criar Conta';
+                        document.getElementById('authBarBtn').innerText = 'Entrar / Criar Conta';
                         carregarDadosLocais();
                     }
                 });
@@ -798,6 +796,15 @@
             atualizarGraficoEvolucao();
         }
 
+        // --- CONTROLE DE MODAIS (Adicionado) ---
+        function abrirModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
         // --- AUTENTICAÇÃO ---
         let isRegisterMode = false;
         function abrirModalAuth() {
@@ -805,7 +812,7 @@
                 auth.signOut();
                 return;
             }
-           abrirModal('authModal');
+            abrirModal('authModal');
         }
 
         function alternarModoAuth() {
@@ -818,7 +825,7 @@
         function executarAutenticacao() {
             if (!auth) {
                 alert('O recurso de nuvem precisa da configuração do Firebase no código.');
-                              fecharModal('authModal');
+                fecharModal('authModal');
                 return;
             }
             const email = document.getElementById('authEmail').value;
@@ -831,7 +838,8 @@
                     .catch(err => alert(err.message));
             } else {
                 auth.signInWithEmailAndPassword(email, pass)
-                    .then(() => { fecharModal('authModal'); alert('Login realizado!'); })                  .catch(err => alert(err.message));
+                    .then(() => { fecharModal('authModal'); alert('Login realizado!'); })
+                    .catch(err => alert(err.message));
             }
         }
 
@@ -848,7 +856,8 @@
         }
 
         function salvarDadosGerais() {
-            let dados = { categorias: categoriasData, meta: metaConfig };           if (currentUser && db) {
+            let dados = { categorias: categoriasData, meta: metaConfig };
+            if (currentUser && db) {
                 db.collection('usuarios').doc(currentUser.uid).set(dados);
             } else {
                 localStorage.setItem('fin_dados_v6', JSON.stringify(dados));
@@ -862,7 +871,9 @@
                     let dados = doc.data();
                     if(dados.categorias) categoriasData = dados.categorias;
                     if(dados.meta) metaConfig = dados.meta;
-                    renderizarCategorias();                    calcularDivisao();
+                    renderizarCategorias();
+                    atualizarSeletorMeta();
+                    calcularDivisao();
                 }
             });
         }
@@ -926,7 +937,8 @@
                                 <strong>${formatarMoeda(item.val)}</strong>
                                 <button onclick="removerGasto(${index}, ${itemIdx})">✕</button>
                             </div>
-                        </div>                   `;
+                        </div>
+                    `;
                 });
                 if (cat.items.length === 0) {
                     itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
@@ -936,7 +948,8 @@
 
                 container.innerHTML += `
                     <div class="result-card" style="border-left: 5px solid ${cat.color || '#4f46e5'};">
-                        <div class="result-header-row">                          <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
+                        <div class="result-header-row">
+                            <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="value">${formatarMoeda(limite)}</span>
                                 ${deleteCatBtn}
@@ -947,7 +960,8 @@
                             <div class="expense-items">${itensHTML}</div>
                             <div class="expense-add-form">
                                 <div class="expense-form-row">
-                                    <input type="text" id="desc_${index}" placeholder="Nome do gasto...">                                   <input type="number" id="val_${index}" placeholder="R$" step="0.01">
+                                    <input type="text" id="desc_${index}" placeholder="Nome do gasto...">
+                                    <input type="number" id="val_${index}" placeholder="R$" step="0.01">
                                     <button onclick="adicionarGasto(${index})">+</button>
                                 </div>
                                 <label class="recurrent-label">
@@ -958,7 +972,8 @@
                                 <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
                                 <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
                             </div>
-                        </div>                   </div>
+                        </div>
+                    </div>
                 `;
             });
             salvarDadosGerais();
@@ -975,7 +990,8 @@
             if(categoriasData[atual]) {
                 select.value = atual;
             } else {
-                select.value = 0;            }
+                select.value = 0;
+            }
             document.getElementById('metaInput').value = metaConfig.valor > 0 ? metaConfig.valor : '';
             atualizarMeta();
         }
@@ -990,7 +1006,8 @@
                 return;
             }
 
-            categoriasData.push({                id: categoriasData.length,
+            categoriasData.push({
+                id: categoriasData.length,
                 label: `${percentVal}% - ${nome}`,
                 percent: percentVal / 100,
                 color: cor,
@@ -1006,7 +1023,8 @@
 
         function removerCategoria(index) {
             if (confirm('Deseja realmente excluir esta categoria?')) {
-                categoriasData.splice(index, 1);                renderizarCategorias();
+                categoriasData.splice(index, 1);
+                renderizarCategorias();
                 atualizarGrafico();
             }
         }
@@ -1022,7 +1040,8 @@
             const descInput = document.getElementById(`desc_${catIndex}`);
             const valInput = document.getElementById(`val_${catIndex}`);
             const recInput = document.getElementById(`rec_${catIndex}`);
-            const nome = descInput.value.trim();           const valor = parseFloat(valInput.value);
+            const nome = descInput.value.trim();
+            const valor = parseFloat(valInput.value);
             const recorrente = recInput.checked;
 
             if (!nome || isNaN(valor) || valor <= 0) {
@@ -1039,7 +1058,8 @@
         }
 
         function removerGasto(catIndex, itemIndex) {
-            categoriasData[catIndex].items.splice(itemIndex, 1);            renderizarCategorias();
+            categoriasData[catIndex].items.splice(itemIndex, 1);
+            renderizarCategorias();
             atualizarInsights();
         }
 
@@ -1064,7 +1084,8 @@
             } else if (percentualGasto > 50) {
                 insightsBox.innerHTML = `💡 <span>Gastos em ${percentualGasto.toFixed(0)}% da renda. Continue controlando.</span>`;
             } else {
-                insightsBox.innerHTML = `🌟 <span style="color: #047857; font-weight: bold;">Parabéns! Suas finanças estão muito saudáveis.</span>`;            }
+                insightsBox.innerHTML = `🌟 <span style="color: #047857; font-weight: bold;">Parabéns! Suas finanças estão muito saudáveis.</span>`;
+            }
         }
 
         function toggleTheme() {
@@ -1079,7 +1100,8 @@
             return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
-        function calcularDivisao() {           const inputValor = document.getElementById('valorTotal').value;
+        function calcularDivisao() {
+            const inputValor = document.getElementById('valorTotal').value;
             const valor = parseFloat(inputValor);
             const alertBox = document.getElementById('alertBox');
 
@@ -1098,7 +1120,8 @@
             atualizarInsights();
         }
 
-        function atualizarGrafico() {            const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
+        function atualizarGrafico() {
+            const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
             financeChart.data.labels = categoriasData.map(c => c.label);
             financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);
             financeChart.data.datasets[0].backgroundColor = categoriasData.map(c => c.color || '#4f46e5');
@@ -1107,7 +1130,8 @@
 
         function atualizarMeta() {
             const valorTotal = parseFloat(document.getElementById('valorTotal').value) || 0;
-            const selectCat = document.getElementById('goalCategorySelect');            const catIdx = parseInt(selectCat.value) || 0;
+            const selectCat = document.getElementById('goalCategorySelect');
+            const catIdx = parseInt(selectCat.value) || 0;
             const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;
 
             metaConfig.catIndex = catIdx;
@@ -1119,7 +1143,8 @@
 
             document.getElementById('goalTitleText').innerText = `Meta (${catSelecionada.label}):`;
             let porcentagem = metaValor > 0 ? Math.min((valOrcamento / metaValor) * 100, 100) : 0;
-           document.getElementById('goalProgressText').innerText = `${formatarMoeda(valOrcamento)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+
+            document.getElementById('goalProgressText').innerText = `${formatarMoeda(valOrcamento)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
             document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
         }
 
@@ -1130,7 +1155,8 @@
             let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
             categoriasData.forEach(cat => {
                 const limite = parseFloat(total) * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);            const saldo = limite - totalGasto;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
+                const saldo = limite - totalGasto;
 
                 texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
                 if(cat.items.length > 0) {
@@ -1143,7 +1169,8 @@
 
             navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
         }
-       // --- HISTÓRICO COM EDIÇÃO E EXCLUSÃO INDIVIDUAL ---
+
+        // --- HISTÓRICO COM EDIÇÃO E EXCLUSÃO INDIVIDUAL ---
         function obterHistoricoLocal() {
             return JSON.parse(localStorage.getItem('fin_historico_v6')) || [];
         }
@@ -1170,7 +1197,7 @@
             if (editandoIndex !== null) {
                 historico[editandoIndex] = itemHistorico;
                 editandoIndex = null;
-                               document.getElementById('btnSalvarHistorico').innerText = '💾 Salvar no Histórico';
+                document.getElementById('btnSalvarHistorico').innerText = '💾 Salvar no Histórico';
                 alert('Registro atualizado com sucesso!');
             } else {
                 historico.unshift(itemHistorico);
@@ -1186,19 +1213,21 @@
             const historyList = document.getElementById('historyList');
             const termoBusca = document.getElementById('searchInput').value.toLowerCase();
             let historico = obterHistoricoLocal();
+
             if (historico.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
                 return;
             }
 
             const agora = new Date();
-            let historicoFiltrado = historico.filter((item, index) => {
+            let historicoFiltrado = historico.filter((item) => {
                 let itemDate = new Date(item.timestamp);
                 let passaTempo = true;
                 if (filtroAtual === 'dia') {
                     passaTempo = itemDate.toDateString() === agora.toDateString();
                 } else if (filtroAtual === 'semana') {
-                    let diffDays = (agora - itemDate) / (1000 * 60 * 60 * 24);                    passaTempo = diffDays >= 0 && diffDays <= 7;
+                    let diffDays = (agora - itemDate) / (1000 * 60 * 60 * 24);
+                    passaTempo = diffDays >= 0 && diffDays <= 7;
                 } else if (filtroAtual === 'mes') {
                     passaTempo = itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();
                 } else if (filtroAtual === 'ano') {
@@ -1225,6 +1254,7 @@
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum registro encontrado.</div>`;
                 return;
             }
+
             historyList.innerHTML = '';
             historicoFiltrado.forEach((item) => {
                 let originalIndex = historico.findIndex(h => h.timestamp === item.timestamp);
@@ -1235,11 +1265,19 @@
                             <strong>${item.valorFormatado}</strong>
                         </div>
                         <div class="history-item-actions">
-                            <button onclick="prepararEdicaoHistorico(${originalIndex})" title="Editar este registro">✏️</button>                          <button onclick="excluirItemHistorico(${originalIndex})" title="Excluir" style="color: #ef4444; font-weight: bold;">✕</button>
+                            <button onclick="prepararEdicaoHistorico(${originalIndex})" title="Editar este registro">✏️</button>
+                            <button onclick="excluirItemHistorico(${originalIndex})" title="Excluir" style="color: #ef4444; font-weight: bold;">✕</button>
                         </div>
                     </div>
                 `;
             });
+        }
+
+        function filtrarHistorico(filtro, btnElement) {
+            filtroAtual = filtro;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            btnElement.classList.add('active');
+            carregarHistorico();
         }
 
         function carregarCalculoSalvo(index) {
@@ -1251,7 +1289,8 @@
                 }
                 renderizarCategorias();
                 atualizarGrafico();
-                atualizarInsights();                window.scrollTo({ top: 0, behavior: 'smooth' });
+                atualizarInsights();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
@@ -1266,7 +1305,7 @@
             if (confirm('Deseja excluir este registro do histórico?')) {
                 let historico = obterHistoricoLocal();
                 historico.splice(index, 1);
-               salvarHistoricoLocal(historico);
+                salvarHistoricoLocal(historico);
                 carregarHistorico();
                 atualizarGraficoEvolucao();
             }
@@ -1280,7 +1319,8 @@
             historico.forEach(item => {
                 item.categoriasCopia.forEach(cat => {
                     if (cat.items.length > 0) {
-                        cat.items.forEach(i => {                           csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};${i.name};${i.val}\n`;
+                        cat.items.forEach(i => {
+                            csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};${i.name};${i.val}\n`;
                         });
                     } else {
                         csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};Nenhum;0\n`;
@@ -1294,7 +1334,7 @@
             link.setAttribute("download", "historico_financeiro.csv");
             document.body.appendChild(link);
             link.click();
-                      document.body.removeChild(link);
+            document.body.removeChild(link);
         }
 
         function atualizarGraficoEvolucao() {
@@ -1308,7 +1348,8 @@
 
         function limparHistorico() {
             if (confirm('Deseja limpar todo o histórico?')) {
-                localStorage.removeItem('fin_historico_v6');              carregarHistorico();
+                localStorage.removeItem('fin_historico_v6');
+                carregarHistorico();
                 atualizarGraficoEvolucao();
             }
         }
@@ -1320,7 +1361,8 @@
             const dataStr = document.getElementById('remindDate').value;
             if (!titulo || !dataStr) { alert('Preencha título e data.'); return; }
             let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            lembretes.push({ title: titulo, date: dataStr });          localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
+            lembretes.push({ title: titulo, date: dataStr });
+            localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
             document.getElementById('remindTitle').value = '';
             document.getElementById('remindDate').value = '';
             renderizarLembretes();
@@ -1330,7 +1372,8 @@
             const container = document.getElementById('reminderList');
             if (lembretes.length === 0) { container.innerHTML = `<div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete.</div>`; return; }
             container.innerHTML = '';
-            lembretes.forEach((rem, idx) => {               let partes = rem.date.split('-');
+            lembretes.forEach((rem, idx) => {
+                let partes = rem.date.split('-');
                 container.innerHTML += `<div class="reminder-row"><span><b>${rem.title}</b> (${partes[2]}/${partes[1]}/${partes[0]})</span><button onclick="removerLembrete(${idx})">✕</button></div>`;
             });
         }
