@@ -7,6 +7,10 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK (Para autenticação e banco de dados em nuvem) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -51,6 +55,29 @@
             width: 100%;
             max-width: 520px;
             transition: background-color 0.3s;
+        }
+
+        .auth-bar {
+            background: var(--result-bg);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-bar button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.78rem;
         }
 
         .header-top {
@@ -153,7 +180,6 @@
             font-weight: 600;
         }
 
-        /* Insights Inteligentes */
         .insights-box {
             background-color: rgba(79, 70, 229, 0.08);
             border-left: 4px solid var(--primary-color);
@@ -197,22 +223,22 @@
             transition: width 0.4s ease;
         }
 
-        .goal-input-container {
+        .goal-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 8px;
-            align-items: center;
         }
 
-        .goal-input-container label {
-            font-size: 0.8rem;
-            margin: 0;
-            white-space: nowrap;
-        }
-
-        .goal-input-container input {
+        .goal-controls select {
+            flex: 1;
             padding: 6px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+        }
+
+        .goal-controls input {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.8rem;
         }
 
         .chart-container {
@@ -434,7 +460,7 @@
         }
 
         .history-list {
-            max-height: 140px;
+            max-height: 160px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -448,14 +474,31 @@
             border-radius: 4px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             color: var(--text-muted);
-            cursor: pointer;
-            transition: background 0.2s;
+            border: 1px solid var(--border-color);
         }
 
-        .history-item:hover {
-            background-color: var(--border-color);
-            color: var(--text-color);
+        .history-item-info {
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-right: 8px;
+        }
+
+        .history-item-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .history-item-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 4px;
         }
 
         .evolution-section {
@@ -559,15 +602,9 @@
     <!-- Modal de Ajuda -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
-            <h3>Como funciona o método 60/20/10/10?</h3>
-            <p>Este é um método simples de organização financeira onde você divide toda a sua renda líquida mensal em partes estratégicas:</p>
-            <ul>
-                <li><b>Custos Fixos:</b> Contas essenciais como aluguel, água, luz, internet e mercado.</li>
-                <li><b>Investimentos:</b> Construção de reserva e futuro.</li>
-                <li><b>Objetivos/Lazer:</b> Dinheiro livre para passeios e desejos.</li>
-                <li><b>Doações/Outros:</b> Imprevistos ou caridade.</li>
-            </ul>
-            <p>Agora você também pode adicionar categorias personalizadas e despesas fixas recorrentes!</p>
+            <h3>Como usar a Gestão Financeira?</h3>
+            <p>Divida sua renda líquida mensal em categorias estratégicas, adicione gastos, defina metas livres para qualquer categoria e salve seu histórico!</p>
+            <p>Faça login para salvar seus dados automaticamente na nuvem.</p>
             <button class="modal-close" onclick="fecharModal('helpModal')">Entendi</button>
         </div>
     </div>
@@ -576,18 +613,14 @@
     <div class="modal-overlay" id="calendarModal">
         <div class="modal-content">
             <h3>📅 Lembretes e Vencimentos</h3>
-            <p style="font-size: 0.82rem; color: var(--text-muted);">Adicione contas para receber notificações automáticas no seu celular no dia exato!</p>
-            
             <div class="reminder-form">
                 <input type="text" id="remindTitle" placeholder="Ex: Pagar Aluguel, Cartão...">
                 <input type="date" id="remindDate">
                 <button class="btn btn-primary" onclick="adicionarLembrete()" style="padding: 8px;">Adicionar Lembrete</button>
             </div>
-
             <div class="reminder-list" id="reminderList">
                 <div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete cadastrado.</div>
             </div>
-
             <button class="modal-close" onclick="fecharModal('calendarModal')">Fechar</button>
         </div>
     </div>
@@ -606,12 +639,32 @@
         </div>
     </div>
 
+    <!-- Modal Login / Conta -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content">
+            <h3 id="authModalTitle">🔑 Entrar na sua Conta</h3>
+            <div class="new-cat-form">
+                <input type="email" id="authEmail" placeholder="Seu e-mail">
+                <input type="password" id="authPass" placeholder="Sua senha">
+                <button class="btn btn-primary" onclick="executarAutenticacao()" id="authSubmitBtn" style="padding: 8px;">Entrar</button>
+                <button class="btn btn-secondary" onclick="alternarModoAuth()" id="authToggleBtn" style="padding: 6px; font-size: 0.8rem;">Não tem conta? Cadastre-se</button>
+            </div>
+            <button class="modal-close" onclick="fecharModal('authModal')">Fechar</button>
+        </div>
+    </div>
+
     <div class="calculator-container">
+        <!-- Barra de Conta na Nuvem -->
+        <div class="auth-bar" id="authBarContainer">
+            <span id="userStatusText">Modo Offline (Dados no aparelho)</span>
+            <button onclick="abrirModalAuth()" id="authBarBtn">Entrar / Criar Conta</button>
+        </div>
+
         <div class="header-top">
             <div class="header-title-area">
                 <h2>Gestão financeira</h2>
                 <div class="header-buttons">
-                    <button class="icon-btn" onclick="abrirCalendario()" title="Calendário de Lembretes">📅</button>
+                    <button class="icon-btn" onclick="abrirCalendario()" title="Calendário">📅</button>
                     <button class="icon-btn" onclick="abrirModal('helpModal')" title="Ajuda">?</button>
                 </div>
             </div>
@@ -624,8 +677,6 @@
         </div>
 
         <div id="alertBox" class="alert-box">⚠️ Por favor, insira um valor válido maior que zero.</div>
-
-        <!-- Insights Inteligentes -->
         <div class="insights-box" id="insightsBox">
             💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>
         </div>
@@ -638,9 +689,8 @@
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="goalProgressBar"></div>
             </div>
-            <div class="goal-input-container">
-                <label for="metaInput">Definir Meta (R$):</label>
-                <input type="number" id="metaInput" placeholder="Ex: 1000.00" step="0.01" oninput="atualizarMeta()">
+            <div class="goal-controls">
+                <select id="goalCategorySelect" onchange="atualizarMeta()"></select>               <input type="number" id="metaInput" placeholder="Valor Meta (R$)" step="0.01" oninput="atualizarMeta()">
             </div>
         </div>
 
@@ -654,7 +704,7 @@
 
         <div class="actions">
             <button class="btn btn-primary" onclick="copiarResumo()">📋 Copiar Resumo</button>
-            <button class="btn btn-secondary" onclick="salvarHistorico()">💾 Salvar</button>
+            <button class="btn btn-secondary" onclick="salvarHistorico()" id="btnSalvarHistorico">💾 Salvar no Histórico</button>
         </div>
 
         <div class="history-section">
@@ -662,10 +712,11 @@
                 <h3>Histórico Salvo</h3>
                 <div class="history-actions-btns">
                     <button class="export-history" onclick="exportarCSV()">📥 Exportar</button>
-                    <button class="clear-history" onclick="limparHistorico()">Limpar</button>
+                    <button class="clear-history" onclick="limparHistorico()">Limpar Tudo</button>
                 </div>
             </div>
-                      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Pesquisar no histórico..." oninput="carregarHistorico()">
+            
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Pesquisar no histórico..." oninput="carregarHistorico()">
 
             <div class="filter-tabs">
                 <button class="filter-tab active" onclick="filtrarHistorico('dia', this)">Dia</button>
@@ -687,59 +738,135 @@
             </div>
         </div>
     </div>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
-            });
-        }
+
+    <script>       // CONFIGURAÇÃO DO FIREBASE (Insira sua configuração gratuita do Firebase aqui se desejar nuvem real)
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "seu-projeto.firebaseapp.com",
+            projectId: "seu-projeto",
+            storageBucket: "seu-projeto.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123:web:abc"
+        };
+
+        let useCloud = false;
+        try {
+            if (firebaseConfig.apiKey !== "SUA_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                useCloud = true;
+            }
+        } catch(e) { useCloud = false; }
+
+        let currentUser = null;       let db = useCloud ? firebase.firestore() : null;
+        let auth = useCloud ? firebase.auth() : null;
 
         let financeChart, evolutionChart;
         let filtroAtual = 'dia';
-              
-        let categoriasData = JSON.parse(localStorage.getItem('fin_categorias_v5')) || [
+        let editandoIndex = null; // Guarda o índice se estiver editando um histórico existente
+        
+        let categoriasData = [
             { id: 0, label: '60% - Custos Fixos', percent: 0.60, color: '#4f46e5', items: [] },
             { id: 1, label: '20% - Investimentos', percent: 0.20, color: '#10b981', items: [] },
             { id: 2, label: '10% - Objetivos/Lazer', percent: 0.10, color: '#f59e0b', items: [] },
             { id: 3, label: '10% - Doações/Outros', percent: 0.10, color: '#ef4444', items: [] }
         ];
 
+        let metaConfig = { catIndex: 1, valor: 0 };
+
         function initApp() {
-            verificarRecorrenciasMensais();
+            if (auth) {
+                auth.onAuthStateChanged(user => {
+                    currentUser = user;
+                    if (user) {
+                        document.getElementById('userStatusText').innerText = `☁️ Conectado: ${user.email}`;
+                        document.getElementById('authBarBtn').innerText = 'Sair';
+                        carregarDadosDaNuvem();
+                    } else {
+                        document.getElementById('userStatusText').innerText = 'Modo Offline (Salvo no aparelho)';
+                       document.getElementById('authBarBtn').innerText = 'Entrar / Criar Conta';
+                        carregarDadosLocais();
+                    }
+                });
+            } else {
+                carregarDadosLocais();
+            }
+
             initCharts();
             renderizarCategorias();
+            atualizarSeletorMeta();
             carregarHistorico();
             atualizarGraficoEvolucao();
-            verificarLembretesDoDia();
-           solicitarPermissaoNotificacao();
         }
 
-        function verificarRecorrenciasMensais() {
-            let ultimoMesCheck = localStorage.getItem('fin_ultimo_mes_recorrente');
-            let mesAtual = new Date().getMonth();
+        // --- AUTENTICAÇÃO ---
+        let isRegisterMode = false;
+        function abrirModalAuth() {
+            if (currentUser && auth) {
+                auth.signOut();
+                return;
+            }
+           abrirModal('authModal');
+        }
 
-            if (ultimoMesCheck !== String(mesAtual)) {
-                // Virou o mês, injetar despesas recorrentes salvas
-                categoriasData.forEach(cat => {
-                    cat.items.forEach(item => {
-                        if (item.recorrente && !item.injetadoEsteMes) {
-                            // Mantém o item ativo para o novo mês
-                        }
-                    });
-                });
-                localStorage.setItem('fin_ultimo_mes_recorrente',mesAtual);
+        function alternarModoAuth() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('authModalTitle').innerText = isRegisterMode ? '📝 Criar Nova Conta' : '🔑 Entrar na sua Conta';
+            document.getElementById('authSubmitBtn').innerText = isRegisterMode ? 'Cadastrar' : 'Entrar';
+            document.getElementById('authToggleBtn').innerText = isRegisterMode ? 'Já tem conta? Entrar' : 'Não tem conta? Cadastre-se';
+        }
+
+        function executarAutenticacao() {
+            if (!auth) {
+                alert('O recurso de nuvem precisa da configuração do Firebase no código.');
+                              fecharModal('authModal');
+                return;
+            }
+            const email = document.getElementById('authEmail').value;
+            const pass = document.getElementById('authPass').value;
+            if(!email || !pass) { alert('Preencha e-mail e senha.'); return; }
+
+            if (isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(() => { fecharModal('authModal'); alert('Conta criada com sucesso!'); })
+                    .catch(err => alert(err.message));
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .then(() => { fecharModal('authModal'); alert('Login realizado!'); })                  .catch(err => alert(err.message));
             }
         }
 
-        function solicitarPermissaoNotificacao() {
-            if ('Notification' in window && Notification.permission !== 'granted') {
-                Notification.requestPermission();
+        // --- DADOS LOCAIS E NUVEM ---
+        function carregarDadosLocais() {
+            let salvos = localStorage.getItem('fin_dados_v6');
+            if(salvos) {
+                let dados = JSON.parse(salvos);
+                if(dados.categorias) categoriasData = dados.categorias;
+                if(dados.meta) metaConfig = dados.meta;
+            }
+            renderizarCategorias();
+            atualizarSeletorMeta();
+        }
+
+        function salvarDadosGerais() {
+            let dados = { categorias: categoriasData, meta: metaConfig };           if (currentUser && db) {
+                db.collection('usuarios').doc(currentUser.uid).set(dados);
+            } else {
+                localStorage.setItem('fin_dados_v6', JSON.stringify(dados));
             }
         }
 
-        function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
-        function abrirCalendario() { abrirModal('calendarModal'); renderizarLembretes(); }
+        function carregarDadosDaNuvem() {
+            if(!db || !currentUser) return;
+            db.collection('usuarios').doc(currentUser.uid).get().then(doc => {
+                if(doc.exists) {
+                    let dados = doc.data();
+                    if(dados.categorias) categoriasData = dados.categorias;
+                    if(dados.meta) metaConfig = dados.meta;
+                    renderizarCategorias();                    calcularDivisao();
+                }
+            });
+        }
+
         function initCharts() {
             const ctxPie = document.getElementById('financeChart').getContext('2d');
             financeChart = new Chart(ctxPie, {
@@ -771,7 +898,7 @@
                 },
                 options: { 
                     responsive: true, 
-                   maintainAspectRatio: false,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { y: { beginAtZero: true } }
                 }
@@ -785,7 +912,8 @@
 
             categoriasData.forEach((cat, index) => {
                 const limite = total * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);             const saldo = limite - totalGasto;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
+                const saldo = limite - totalGasto;
                 const saldoClass = saldo < 0 ? 'color: #ef4444; font-weight: bold;' : 'color: #10b981; font-weight: bold;';
 
                 let itensHTML = '';
@@ -798,9 +926,9 @@
                                 <strong>${formatarMoeda(item.val)}</strong>
                                 <button onclick="removerGasto(${index}, ${itemIdx})">✕</button>
                             </div>
-                        </div>
-                    `;
-                });            if (cat.items.length === 0) {
+                        </div>                   `;
+                });
+                if (cat.items.length === 0) {
                     itensHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; text-align: center;">Nenhum gasto adicionado.</div>`;
                 }
 
@@ -808,7 +936,7 @@
 
                 container.innerHTML += `
                     <div class="result-card" style="border-left: 5px solid ${cat.color || '#4f46e5'};">
-                        <div class="result-header-row">                           <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
+                        <div class="result-header-row">                          <input type="text" class="label-input" value="${cat.label}" oninput="atualizarNomeCategoria(${index}, this.value)">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="value">${formatarMoeda(limite)}</span>
                                 ${deleteCatBtn}
@@ -830,10 +958,26 @@
                                 <span>Total gasto: ${formatarMoeda(totalGasto)}</span>
                                 <span style="${saldoClass}">Sobrando: ${formatarMoeda(saldo)}</span>
                             </div>
-                        </div>                    </div>
+                        </div>                   </div>
                 `;
             });
-            salvarDadosLocais();
+            salvarDadosGerais();
+            atualizarSeletorMeta();
+        }
+
+        function atualizarSeletorMeta() {
+            const select = document.getElementById('goalCategorySelect');
+            let atual = select.value !== "" ? parseInt(select.value) : metaConfig.catIndex;
+            select.innerHTML = '';
+            categoriasData.forEach((cat, idx) => {
+                select.innerHTML += `<option value="${idx}">${cat.label}</option>`;
+            });
+            if(categoriasData[atual]) {
+                select.value = atual;
+            } else {
+                select.value = 0;            }
+            document.getElementById('metaInput').value = metaConfig.valor > 0 ? metaConfig.valor : '';
+            atualizarMeta();
         }
 
         function salvarNovaCategoria() {
@@ -846,8 +990,8 @@
                 return;
             }
 
-            categoriasData.push({
-                id: categoriasData.length,              label: `${percentVal}% - ${nome}`,
+            categoriasData.push({                id: categoriasData.length,
+                label: `${percentVal}% - ${nome}`,
                 percent: percentVal / 100,
                 color: cor,
                 items: []
@@ -858,34 +1002,27 @@
             fecharModal('categoryModal');
             renderizarCategorias();
             atualizarGrafico();
-            atualizarMeta();
         }
 
         function removerCategoria(index) {
             if (confirm('Deseja realmente excluir esta categoria?')) {
-                categoriasData.splice(index, 1);
-               renderizarCategorias();
+                categoriasData.splice(index, 1);                renderizarCategorias();
                 atualizarGrafico();
-                atualizarMeta();
             }
-        }
-
-        function salvarDadosLocais() {
-            localStorage.setItem('fin_categorias_v5', JSON.stringify(categoriasData));
         }
 
         function atualizarNomeCategoria(index, novoNome) {
             categoriasData[index].label = novoNome;
             atualizarGrafico();
-            atualizarMeta();
-            salvarDadosLocais();
+            atualizarSeletorMeta();
+            salvarDadosGerais();
         }
 
         function adicionarGasto(catIndex) {
-            const descInput = document.getElementById(`desc_${catIndex}`);         const valInput = document.getElementById(`val_${catIndex}`);
+            const descInput = document.getElementById(`desc_${catIndex}`);
+            const valInput = document.getElementById(`val_${catIndex}`);
             const recInput = document.getElementById(`rec_${catIndex}`);
-            const nome = descInput.value.trim();
-            const valor = parseFloat(valInput.value);
+            const nome = descInput.value.trim();           const valor = parseFloat(valInput.value);
             const recorrente = recInput.checked;
 
             if (!nome || isNaN(valor) || valor <= 0) {
@@ -896,13 +1033,13 @@
             categoriasData[catIndex].items.push({ name: nome, val: valor, recorrente: recorrente });
             descInput.value = '';
             valInput.value = '';
-            recInput.checked = false;            renderizarCategorias();
+            recInput.checked = false;
+            renderizarCategorias();
             atualizarInsights();
         }
 
         function removerGasto(catIndex, itemIndex) {
-            categoriasData[catIndex].items.splice(itemIndex, 1);
-            renderizarCategorias();
+            categoriasData[catIndex].items.splice(itemIndex, 1);            renderizarCategorias();
             atualizarInsights();
         }
 
@@ -911,10 +1048,10 @@
             const insightsBox = document.getElementById('insightsBox');
 
             if (!total || total <= 0) {
-                insightsBox.innerHTML = `💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>`;               return;
+                insightsBox.innerHTML = `💡 <span>Insira sua renda total para ver dicas financeiras automáticas.</span>`;
+                return;
             }
 
-            // Calcula total geral gasto
             let totalGastoGeral = 0;
             categoriasData.forEach(cat => {
                 totalGastoGeral += cat.items.reduce((acc, item) => acc + item.val, 0);
@@ -923,33 +1060,32 @@
             let percentualGasto = (totalGastoGeral / total) * 100;
 
             if (percentualGasto > 80) {
-                insightsBox.innerHTML = `⚠️ <span style="color: #b91c1c; font-weight: bold;">Atenção: Você já comprometeu ${percentualGasto.toFixed(0)}% da sua renda total com gastos!</span>`;
+                insightsBox.innerHTML = `⚠️ <span style="color: #b91c1c; font-weight: bold;">Atenção: Você comprometeu ${percentualGasto.toFixed(0)}% da renda com gastos!</span>`;
             } else if (percentualGasto > 50) {
-                insightsBox.innerHTML = `💡<span>Seus gastos estão em ${percentualGasto.toFixed(0)}% da renda. Continue controlando suas despesas.</span>`;
+                insightsBox.innerHTML = `💡 <span>Gastos em ${percentualGasto.toFixed(0)}% da renda. Continue controlando.</span>`;
             } else {
-                insightsBox.innerHTML = `🌟 <span style="color: #047857; font-weight: bold;">Parabéns! Suas finanças estão muito saudáveis, com ótimas margens de sobra.</span>`;
-            }
+                insightsBox.innerHTML = `🌟 <span style="color: #047857; font-weight: bold;">Parabéns! Suas finanças estão muito saudáveis.</span>`;            }
         }
 
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);           document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
+            body.setAttribute('data-theme', newTheme);
+            document.querySelector('.theme-toggle').innerText = newTheme === 'light' ? '🌙 Tema' : '☀️ Tema';
         }
 
         function formatarMoeda(num) {
             return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
-        function calcularDivisao() {
-            const inputValor = document.getElementById('valorTotal').value;
+        function calcularDivisao() {           const inputValor = document.getElementById('valorTotal').value;
             const valor = parseFloat(inputValor);
             const alertBox = document.getElementById('alertBox');
 
             if (inputValor !== "" && (isNaN(valor) || valor < 0)) {
                 alertBox.style.display = 'block';
-               renderizarCategorias();
+                renderizarCategorias();
                 atualizarGrafico();
                 return;
             } else {
@@ -962,23 +1098,28 @@
             atualizarInsights();
         }
 
-        function atualizarGrafico() {
-            const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
+        function atualizarGrafico() {            const inputValor = parseFloat(document.getElementById('valorTotal').value) || 0;
             financeChart.data.labels = categoriasData.map(c => c.label);
-            financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);           financeChart.data.datasets[0].backgroundColor = categoriasData.map(c => c.color || '#4f46e5');
+            financeChart.data.datasets[0].data = categoriasData.map(c => inputValor * c.percent);
+            financeChart.data.datasets[0].backgroundColor = categoriasData.map(c => c.color || '#4f46e5');
             financeChart.update();
         }
 
         function atualizarMeta() {
             const valorTotal = parseFloat(document.getElementById('valorTotal').value) || 0;
-            // Procura a categoria de investimento (geralmente a 2ª ou com nome investimento)
-            let catInv = categoriasData.find(c => c.label.toLowerCase().includes('invest')) || categoriasData[1] || categoriasData[0];
-            const valInv = valorTotal * catInv.percent;
+            const selectCat = document.getElementById('goalCategorySelect');            const catIdx = parseInt(selectCat.value) || 0;
             const metaValor = parseFloat(document.getElementById('metaInput').value) || 0;
-           document.getElementById('goalTitleText').innerText = `Meta (${catInv.label}):`;
-            let porcentagem = metaValor > 0 ? Math.min((valInv / metaValor) * 100, 100) : 0;
 
-            document.getElementById('goalProgressText').innerText = `${formatarMoeda(valInv)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
+            metaConfig.catIndex = catIdx;
+            metaConfig.valor = metaValor;
+            salvarDadosGerais();
+
+            let catSelecionada = categoriasData[catIdx] || categoriasData[0];
+            let valOrcamento = valorTotal * catSelecionada.percent;
+
+            document.getElementById('goalTitleText').innerText = `Meta (${catSelecionada.label}):`;
+            let porcentagem = metaValor > 0 ? Math.min((valOrcamento / metaValor) * 100, 100) : 0;
+           document.getElementById('goalProgressText').innerText = `${formatarMoeda(valOrcamento)} / ${formatarMoeda(metaValor)} (${porcentagem.toFixed(0)}%)`;
             document.getElementById('goalProgressBar').style.width = `${porcentagem}%`;
         }
 
@@ -987,10 +1128,9 @@
             if (!total || total <= 0) { alert('Insira um valor válido primeiro!'); return; }
 
             let texto = `*Gestão Financeira*\nTotal: ${formatarMoeda(parseFloat(total))}\n\n`;
-           categoriasData.forEach(cat => {
+            categoriasData.forEach(cat => {
                 const limite = parseFloat(total) * cat.percent;
-                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);
-                const saldo = limite - totalGasto;
+                const totalGasto = cat.items.reduce((acc, item) => acc + item.val, 0);            const saldo = limite - totalGasto;
 
                 texto += `• *${cat.label}* (Orçamento: ${formatarMoeda(limite)})\n`;
                 if(cat.items.length > 0) {
@@ -1000,79 +1140,16 @@
                 }
                 texto += `   *Sobrando:* ${formatarMoeda(saldo)}\n\n`;
             });
-          navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
+
+            navigator.clipboard.writeText(texto).then(() => alert('Resumo copiado com sucesso!'));
+        }
+       // --- HISTÓRICO COM EDIÇÃO E EXCLUSÃO INDIVIDUAL ---
+        function obterHistoricoLocal() {
+            return JSON.parse(localStorage.getItem('fin_historico_v6')) || [];
         }
 
-        function adicionarLembrete() {
-            const titulo = document.getElementById('remindTitle').value.trim();
-            const dataStr = document.getElementById('remindDate').value;
-
-            if (!titulo || !dataStr) {
-                alert('Preencha o título e selecione uma data.');
-                return;
-            }
-
-            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            lembretes.push({ title: titulo, date: dataStr });
-            localStorage.setItem('fin_lembretes',JSON.stringify(lembretes));
-
-            document.getElementById('remindTitle').value = '';
-            document.getElementById('remindDate').value = '';
-            renderizarLembretes();
-            alert('Lembrete salvo com sucesso!');
-        }
-
-        function renderizarLembretes() {
-            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            const container = document.getElementById('reminderList');
-
-            if (lembretes.length === 0) {
-                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete cadastrado.</div>`;             return;
-            }
-
-            container.innerHTML = '';
-            lembretes.forEach((rem, idx) => {
-                let partesData = rem.date.split('-');
-                let dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
-                container.innerHTML += `
-                    <div class="reminder-row">
-                        <span><b>${rem.title}</b> (${dataFormatada})</span>
-                        <button onclick="removerLembrete(${idx})">✕</button>
-                    </div>
-                `;
-            });
-        }
-       function removerLembrete(idx) {
-            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            lembretes.splice(idx, 1);
-            localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
-            renderizarLembretes();
-        }
-
-        function verificarLembretesDoDia() {
-            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
-            let hoje = new Date().toISOString().split('T')[0];
-
-            lembretes.forEach(rem => {
-                if (rem.date === hoje) {
-                                    dispararNotificacao(`Vencimento Hoje!`, `Lembrete financeiro: ${rem.title}`);
-                }
-            });
-        }
-
-        function dispararNotificacao(titulo, corpo) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(titulo, {
-                    body: corpo,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png'
-                });
-            }
-        }
-      function filtrarHistorico(filtro, elementoBtn) {
-            filtroAtual = filtro;
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            elementoBtn.classList.add('active');
-            carregarHistorico();
+        function salvarHistoricoLocal(hist) {
+            localStorage.setItem('fin_historico_v6', JSON.stringify(hist));
         }
 
         function salvarHistorico() {
@@ -1081,46 +1158,53 @@
 
             const agora = new Date();
             const itemHistorico = {
-                timestamp: agora.getTime(),
+                timestamp: editandoIndex !== null ? obterHistoricoLocal()[editandoIndex].timestamp : agora.getTime(),
                 dataCompleta: agora.toLocaleDateString('pt-BR'),
-                valorBruto: parseFloat(total),            valorFormatado: formatarMoeda(parseFloat(total)),
+                valorBruto: parseFloat(total),
+                valorFormatado: formatarMoeda(parseFloat(total)),
                 categoriasCopia: JSON.parse(JSON.stringify(categoriasData))
             };
 
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
-            historico.unshift(itemHistorico);
+            let historico = obterHistoricoLocal();
 
-            localStorage.setItem('fin_historico_v5', JSON.stringify(historico));
+            if (editandoIndex !== null) {
+                historico[editandoIndex] = itemHistorico;
+                editandoIndex = null;
+                               document.getElementById('btnSalvarHistorico').innerText = '💾 Salvar no Histórico';
+                alert('Registro atualizado com sucesso!');
+            } else {
+                historico.unshift(itemHistorico);
+                alert('Cálculo salvo no histórico!');
+            }
+
+            salvarHistoricoLocal(historico);
             carregarHistorico();
             atualizarGraficoEvolucao();
-            alert('Cálculo salvo no histórico!');
         }
+
         function carregarHistorico() {
             const historyList = document.getElementById('historyList');
             const termoBusca = document.getElementById('searchInput').value.toLowerCase();
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
-
+            let historico = obterHistoricoLocal();
             if (historico.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum cálculo salvo ainda.</div>`;
                 return;
             }
 
             const agora = new Date();
-            let historicoFiltrado = historico.filter(item => {
-                let itemDate = new Date(item.timestamp);            // Filtro temporal
+            let historicoFiltrado = historico.filter((item, index) => {
+                let itemDate = new Date(item.timestamp);
                 let passaTempo = true;
                 if (filtroAtual === 'dia') {
                     passaTempo = itemDate.toDateString() === agora.toDateString();
                 } else if (filtroAtual === 'semana') {
-                    let diffDays = (agora - itemDate) / (1000 * 60 * 60 * 24);
-                    passaTempo = diffDays >= 0 && diffDays <= 7;
+                    let diffDays = (agora - itemDate) / (1000 * 60 * 60 * 24);                    passaTempo = diffDays >= 0 && diffDays <= 7;
                 } else if (filtroAtual === 'mes') {
                     passaTempo = itemDate.getMonth() === agora.getMonth() && itemDate.getFullYear() === agora.getFullYear();
                 } else if (filtroAtual === 'ano') {
                     passaTempo = itemDate.getFullYear() === agora.getFullYear();
                 }
 
-                // Filtro de busca por texto
                 let passaBusca = true;
                 if (termoBusca) {
                     let achouNosItens = false;
@@ -1132,38 +1216,71 @@
                         });
                     });
                     passaBusca = item.dataCompleta.includes(termoBusca) || item.valorFormatado.includes(termoBusca) || achouNosItens;
-                }             return passaTempo && passaBusca;
+                }
+
+                return passaTempo && passaBusca;
             });
 
             if (historicoFiltrado.length === 0) {
                 historyList.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Nenhum registro encontrado.</div>`;
                 return;
             }
-
             historyList.innerHTML = '';
             historicoFiltrado.forEach((item) => {
                 let originalIndex = historico.findIndex(h => h.timestamp === item.timestamp);
                 historyList.innerHTML += `
-                    <div class="history-item" onclick="carregarCalculoSalvo(${originalIndex})">
-                        <span>📅 ${item.dataCompleta}</span>                 <strong>${item.valorFormatado}</strong>
+                    <div class="history-item">
+                        <div class="history-item-info" onclick="carregarCalculoSalvo(${originalIndex})">
+                            <span>📅 ${item.dataCompleta}</span>
+                            <strong>${item.valorFormatado}</strong>
+                        </div>
+                        <div class="history-item-actions">
+                            <button onclick="prepararEdicaoHistorico(${originalIndex})" title="Editar este registro">✏️</button>                          <button onclick="excluirItemHistorico(${originalIndex})" title="Excluir" style="color: #ef4444; font-weight: bold;">✕</button>
+                        </div>
                     </div>
                 `;
             });
         }
 
-        function exportarCSV() {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
-            if (historico.length === 0) {
-                alert('Não há dados no histórico para exportar.');
-                return;
+        function carregarCalculoSalvo(index) {
+            let historico = obterHistoricoLocal();
+            if (historico[index]) {
+                document.getElementById('valorTotal').value = historico[index].valorBruto;
+                if (historico[index].categoriasCopia) {
+                    categoriasData = historico[index].categoriasCopia;
+                }
+                renderizarCategorias();
+                atualizarGrafico();
+                atualizarInsights();                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        }
+
+        function prepararEdicaoHistorico(index) {
+            carregarCalculoSalvo(index);
+            editandoIndex = index;
+            document.getElementById('btnSalvarHistorico').innerText = '💾 Atualizar no Histórico';
+            alert('Modo de edição ativado! Altere os valores acima e clique em "Atualizar no Histórico".');
+        }
+
+        function excluirItemHistorico(index) {
+            if (confirm('Deseja excluir este registro do histórico?')) {
+                let historico = obterHistoricoLocal();
+                historico.splice(index, 1);
+               salvarHistoricoLocal(historico);
+                carregarHistorico();
+                atualizarGraficoEvolucao();
+            }
+        }
+
+        function exportarCSV() {
+            let historico = obterHistoricoLocal();
+            if (historico.length === 0) { alert('Não há dados para exportar.'); return; }
 
             let csvContent = "data:text/csv;charset=utf-8,Data;Valor Total;Categoria;Gasto;Valor Gasto\n";
-          historico.forEach(item => {
+            historico.forEach(item => {
                 item.categoriasCopia.forEach(cat => {
                     if (cat.items.length > 0) {
-                        cat.items.forEach(i => {
-                            csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};${i.name};${i.val}\n`;
+                        cat.items.forEach(i => {                           csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};${i.name};${i.val}\n`;
                         });
                     } else {
                         csvContent += `${item.dataCompleta};${item.valorBruto};${cat.label};Nenhum;0\n`;
@@ -1173,46 +1290,58 @@
 
             let encodedUri = encodeURI(csvContent);
             let link = document.createElement("a");
-            link.setAttribute("href",encodedUri);
+            link.setAttribute("href", encodedUri);
             link.setAttribute("download", "historico_financeiro.csv");
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-        }
-
-        function carregarCalculoSalvo(index) {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
-            if (historico[index]) {
-                document.getElementById('valorTotal').value = historico[index].valorBruto;
-                if (historico[index].categoriasCopia) {
-                    categoriasData = historico[index].categoriasCopia;
-                }
-                               renderizarCategorias();
-                atualizarGrafico();
-                atualizarMeta();
-                atualizarInsights();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+                      document.body.removeChild(link);
         }
 
         function atualizarGraficoEvolucao() {
-            let historico = JSON.parse(localStorage.getItem('fin_historico_v5')) || [];
+            let historico = obterHistoricoLocal();
             let historicoCronologico = [...historico].reverse();
 
             evolutionChart.data.labels = historicoCronologico.map(i => i.dataCompleta);
-            evolutionChart.data.datasets[0].data =historicoCronologico.map(i => i.valorBruto);
+            evolutionChart.data.datasets[0].data = historicoCronologico.map(i => i.valorBruto);
             evolutionChart.update();
         }
 
         function limparHistorico() {
-            localStorage.removeItem('fin_historico_v5');
-            carregarHistorico();
-            atualizarGraficoEvolucao();
+            if (confirm('Deseja limpar todo o histórico?')) {
+                localStorage.removeItem('fin_historico_v6');              carregarHistorico();
+                atualizarGraficoEvolucao();
+            }
         }
 
-        window.onload = function() {
-            initApp();
-        };
+        // Lembretes
+        function abrirCalendario() { abrirModal('calendarModal'); renderizarLembretes(); }
+        function adicionarLembrete() {
+            const titulo = document.getElementById('remindTitle').value.trim();
+            const dataStr = document.getElementById('remindDate').value;
+            if (!titulo || !dataStr) { alert('Preencha título e data.'); return; }
+            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
+            lembretes.push({ title: titulo, date: dataStr });          localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
+            document.getElementById('remindTitle').value = '';
+            document.getElementById('remindDate').value = '';
+            renderizarLembretes();
+        }
+        function renderizarLembretes() {
+            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
+            const container = document.getElementById('reminderList');
+            if (lembretes.length === 0) { container.innerHTML = `<div style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Nenhum lembrete.</div>`; return; }
+            container.innerHTML = '';
+            lembretes.forEach((rem, idx) => {               let partes = rem.date.split('-');
+                container.innerHTML += `<div class="reminder-row"><span><b>${rem.title}</b> (${partes[2]}/${partes[1]}/${partes[0]})</span><button onclick="removerLembrete(${idx})">✕</button></div>`;
+            });
+        }
+        function removerLembrete(idx) {
+            let lembretes = JSON.parse(localStorage.getItem('fin_lembretes')) || [];
+            lembretes.splice(idx, 1);
+            localStorage.setItem('fin_lembretes', JSON.stringify(lembretes));
+            renderizarLembretes();
+        }
+
+        window.onload = function() { initApp(); };
     </script>
 </body>
 </html>
